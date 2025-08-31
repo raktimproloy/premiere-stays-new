@@ -15,7 +15,7 @@ interface ContactMessage {
   ipAddress: string;
   userAgent: string;
 }
-export default function index() {
+export default function Index() {
     const [messages, setMessages] = useState<ContactMessage[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);

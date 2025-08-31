@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.NEXT_PUBLIC_MONGODB_URL!;
+const uri = process.env.NEXT_PUBLIC_MONGODB_URL || "mongodb+srv://hiddenguy:8YXnTmTRwTlIrVZI@project1.rvwfnr9.mongodb.net/?retryWrites=true&w=majority&appName=Project1";
 
 // MongoDB connection options with better timeout and retry settings
 const options = {
@@ -16,9 +16,9 @@ const options = {
 let client;
 let clientPromise: Promise<MongoClient>;
 
-if (!process.env.NEXT_PUBLIC_MONGODB_URL) {
-  throw new Error("Please add your Mongo URI to .env");
-}
+// if (!process.env.NEXT_PUBLIC_MONGODB_URL) {
+//   throw new Error("Please add your Mongo URI to .env");
+// }
 
 if (process.env.NODE_ENV === "development") {
   if (!(global as any)._mongoClientPromise) {

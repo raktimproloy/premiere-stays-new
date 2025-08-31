@@ -23,6 +23,16 @@ type FormData = {
   password: string;
   confirmPassword: string;
   rememberMe: boolean;
+  // Admin-specific fields
+  contactPerson: string;
+  mailingAddress: string;
+  desiredService: string;
+  // New business fields
+  proofOfOwnership: string;
+  businessLicenseNumber: string;
+  taxId: string;
+  bankAccountInfo: string;
+  taxForm: string;
 };
 
 // Type definitions for form errors
@@ -34,6 +44,10 @@ type FormErrors = {
   dob?: string;
   password?: string;  
   confirmPassword?: string;
+  // Admin-specific field errors
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
 };
 
 const SignUpForm = () => {
@@ -47,6 +61,16 @@ const SignUpForm = () => {
     password: '',
     confirmPassword: '',
     rememberMe: false,
+    // Admin-specific fields
+    contactPerson: '',
+    mailingAddress: '',
+    desiredService: '',
+    // New business fields
+    proofOfOwnership: '',
+    businessLicenseNumber: '',
+    taxId: '',
+    bankAccountInfo: '',
+    taxForm: '',
   });
 
   // State for form errors
@@ -65,20 +89,18 @@ const SignUpForm = () => {
   }, []);
 
   // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-    
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     // Clear error when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors({
-        ...errors,
-        [name]: undefined,
-      });
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
@@ -106,6 +128,19 @@ const SignUpForm = () => {
     // Role validation
     if (!formData.role || formData.role === '') {
       newErrors.role = 'Please select your role';
+    }
+
+    // Admin-specific validations
+    if (formData.role === 'admin') {
+      // Mailing address validation (required for admin)
+      if (!formData.mailingAddress.trim()) {
+        newErrors.mailingAddress = 'Mailing address is required for property management';
+      }
+      
+      // Desired service validation (required for admin)
+      if (!formData.desiredService) {
+        newErrors.desiredService = 'Please select a desired service';
+      }
     }
 
     // Full name validation
@@ -178,7 +213,17 @@ const SignUpForm = () => {
         email: formData.email,
         phone: formData.phone,
         dob: formData.dob,
-        password: formData.password
+        password: formData.password,
+        // Admin-specific fields
+        contactPerson: formData.contactPerson,
+        mailingAddress: formData.mailingAddress,
+        desiredService: formData.desiredService,
+        // New business fields
+        proofOfOwnership: formData.proofOfOwnership,
+        businessLicenseNumber: formData.businessLicenseNumber,
+        taxId: formData.taxId,
+        bankAccountInfo: formData.bankAccountInfo,
+        taxForm: formData.taxForm
       });
       
       console.log('Signup result:', success); // Debug log
@@ -231,6 +276,7 @@ const SignUpForm = () => {
             Choose whether you want to manage properties or book them as a guest
           </p>
         </div>
+
         <div className='grid md:grid-cols-2 grid-cols-1 gap-2 md:gap-4 mb-4'>
           {/* Full Name */}
           <div>
@@ -451,7 +497,163 @@ const SignUpForm = () => {
             <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
           )}
         </div>
-        
+                {/* Admin-specific fields */}
+                {formData.role === 'admin' && (
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Management Details</h3>
+            
+            {/* Contact Person */}
+            <div>
+              {/* <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Person <span className="text-gray-500">(Optional)</span>
+              </label> */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.5007 10C12.8018 10 14.6673 8.13454 14.6673 5.83335C14.6673 3.53217 12.8018 1.66669 10.5007 1.66669C8.19946 1.66669 6.33398 3.53217 6.33398 5.83335C6.33398 8.13454 8.19946 10 10.5007 10Z" stroke="#4E5258" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M17.6585 18.3333C17.6585 15.1083 14.4501 12.5 10.5001 12.5C6.55013 12.5 3.34180 15.1083 3.34180 18.3333" stroke="#4E5258" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="contactPerson"
+                  name="contactPerson"
+                  value={formData.contactPerson}
+                  onChange={handleChange}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition ${
+                    errors.contactPerson 
+                      ? 'border-red-500 focus:ring-red-200' 
+                      : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
+                  }`}
+                  placeholder="Contact person name (Optional)"
+                />
+              </div>
+              {errors.contactPerson && (
+                <p className="mt-1 text-sm text-red-600">{errors.contactPerson}</p>
+              )}
+            </div>
+
+            {/* Mailing Address */}
+            <div>
+              {/* <label htmlFor="mailingAddress" className="block text-sm font-medium text-gray-700 mb-2">
+                Mailing Address
+              </label> */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2C11.1 2 12 2.9 12 4C12 5.1 11.1 6 10 6C8.9 6 8 5.1 8 4C8 2.9 8.9 2 10 2ZM10 18C11.1 18 12 17.1 12 16C12 14.9 11.1 14 10 14C8.9 14 8 14.9 8 16C8 17.1 8.9 18 10 18ZM10 10C11.1 10 12 9.1 12 8C12 6.9 11.1 6 10 6C8.9 6 8 6.9 8 8C8 9.1 8.9 10 10 10Z" fill="#4E5258"/>
+                  </svg>
+                </div>
+                <input
+                type="email"
+                  id="mailingAddress"
+                  name="mailingAddress"
+                  value={formData.mailingAddress}
+                  onChange={handleChange}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:outline-none transition resize-none ${
+                    errors.mailingAddress 
+                      ? 'border-red-500 focus:ring-red-200' 
+                      : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
+                  }`}
+                  placeholder="Enter your complete mailing address"
+                  required
+                />
+              </div>
+              {errors.mailingAddress && (
+                <p className="mt-1 text-sm text-red-600">{errors.mailingAddress}</p>
+              )}
+            </div>
+
+            {/* Desired Service */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Desired Service
+              </label>
+              <div className="space-y-3">
+                {/* Full Management */}
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="full-management"
+                    name="desiredService"
+                    value="full-management"
+                    checked={formData.desiredService === 'full-management'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    required
+                  />
+                  <label htmlFor="full-management" className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                    <span>Full Management</span>
+                    <div className="relative group">
+                      <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                        Complete property management including marketing, bookings, maintenance, and guest communication
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Stage and Manage */}
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="stage-and-manage"
+                    name="desiredService"
+                    value="stage-and-manage"
+                    checked={formData.desiredService === 'stage-and-manage'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    required
+                  />
+                  <label htmlFor="stage-and-manage" className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                    <span>Stage and Manage</span>
+                    <div className="relative group">
+                      <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                        Property staging for optimal presentation and ongoing management services
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Custom Manage */}
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="custom-manage"
+                    name="desiredService"
+                    value="custom-manage"
+                    checked={formData.desiredService === 'custom-manage'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    required
+                  />
+                  <label htmlFor="custom-manage" className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                    <span>Custom Manage</span>
+                    <div className="relative group">
+                      <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                        Tailored management services based on your specific needs and requirements
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              {errors.desiredService && (
+                <p className="mt-1 text-sm text-red-600">{errors.desiredService}</p>
+              )}
+            </div>
+          </div>
+        )}
         {/* Remember Me */}
         <div className="flex items-center">
           <input

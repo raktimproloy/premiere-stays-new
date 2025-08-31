@@ -16,6 +16,16 @@ export interface User {
   emailVerified: boolean;
   guestId?: number; // Add guest ID from OwnerRez
   registerType?: 'manual' | 'google' | 'facebook' | 'apple'; // Add register type
+  // Admin-specific fields
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
+  // Business fields
+  proofOfOwnership?: string;
+  businessLicenseNumber?: string;
+  taxId?: string;
+  bankAccountInfo?: string;
+  taxForm?: string;
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;
@@ -41,6 +51,16 @@ export const authService = {
     guestId?: number; // Add guest ID parameter
     registerType?: 'manual' | 'google' | 'facebook' | 'apple'; // Add register type
     role?: string; // Add role parameter
+    // Admin-specific fields
+    contactPerson?: string;
+    mailingAddress?: string;
+    desiredService?: string;
+      // Business fields
+  proofOfOwnership?: string;
+    businessLicenseNumber?: string;
+    taxId?: string;
+    bankAccountInfo?: string;
+    taxForm?: string;
   }): Promise<AuthResponse> {
     try {
       const client = await clientPromise;
@@ -82,6 +102,18 @@ export const authService = {
         emailVerified: (userData.registerType === 'google' || userData.registerType === 'facebook' || userData.registerType === 'apple') ? true : false, // Social accounts are verified
         guestId: userData.guestId, // Store the guest ID
         registerType: userData.registerType || 'manual', // Store register type
+        // Admin-specific fields (only save if role is admin)
+        ...(userData.role === 'admin' && {
+          contactPerson: userData.contactPerson || '',
+          mailingAddress: userData.mailingAddress || '',
+          desiredService: userData.desiredService || '',
+                  // Business fields
+        proofOfOwnership: userData.proofOfOwnership || '',
+          businessLicenseNumber: userData.businessLicenseNumber || '',
+          taxId: userData.taxId || '',
+          bankAccountInfo: userData.bankAccountInfo || '',
+          taxForm: userData.taxForm || ''
+        }),
         createdAt: new Date(),
         updatedAt: new Date(),
         lastLogin: new Date(),

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSpinner } from 'react-icons/fa';
 import BillingAddressSection from './BillingAddressSection';
-// import PropertyPreferencesSection from './PropertyPreferencesSection';
+import PropertyPreferencesSection from './PropertyPreferencesSection';
 import SocialMediaSection from './SocialMediaSection';
 import SettingsHeader from './SettingsHeader';
 
@@ -15,12 +15,10 @@ interface UserSettings {
     country: string;
   };
   propertyPreferences: {
-    preferredLocations: string[];
-    preferredAmenities: string[];
+    preferredLocation: string;
     maxPrice: number;
+    propertyType: string;
     minBedrooms: number;
-    minBathrooms: number;
-    propertyType: string[];
   };
   socialMedia: {
     facebook?: string;
@@ -136,10 +134,10 @@ export default function Settings() {
           onUpdate={(billingAddress) => updateSettings({ billingAddress })}
         />
         
-        {/* <PropertyPreferencesSection 
+        <PropertyPreferencesSection 
           propertyPreferences={settings.propertyPreferences}
           onUpdate={(propertyPreferences) => updateSettings({ propertyPreferences })}
-        /> */}
+        />
         
         <SocialMediaSection 
           socialMedia={settings.socialMedia}

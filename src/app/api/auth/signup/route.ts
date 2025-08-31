@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     console.log('Signup API called. Environment:', process.env.NODE_ENV);
     console.log('Vercel environment:', process.env.VERCEL);
     
-    const { fullName, email, phone, dob, password, profileImage, registerType, role } = await request.json();
+    const { fullName, email, phone, dob, password, profileImage, registerType, role, contactPerson, mailingAddress, desiredService } = await request.json();
 
     // Debug logging for role
     console.log('API route role debug:', {
@@ -74,6 +74,25 @@ export async function POST(request: NextRequest) {
           { success: false, message: 'Invalid role selected' },
           { status: 400 }
         );
+      }
+      
+      // Additional validation for admin users
+      if (role === 'admin') {
+        if (!mailingAddress || !desiredService) {
+          return NextResponse.json(
+            { success: false, message: 'Mailing address and desired service are required for admin users' },
+            { status: 400 }
+          );
+        }
+        
+        // Validate desired service
+        const validServices = ['full-management', 'stage-and-manage', 'custom-manage'];
+        if (!validServices.includes(desiredService)) {
+          return NextResponse.json(
+            { success: false, message: 'Invalid desired service selected' },
+            { status: 400 }
+          );
+        }
       }
     }
 
@@ -120,7 +139,11 @@ export async function POST(request: NextRequest) {
       profileImage,
       guestId: guestData.id, // Add guest ID to the signup data
       registerType: registerType || 'manual', // Add register type
-      role: role // Add role
+      role: role, // Add role
+      // Admin-specific fields
+      contactPerson: role === 'admin' ? contactPerson : undefined,
+      mailingAddress: role === 'admin' ? mailingAddress : undefined,
+      desiredService: role === 'admin' ? desiredService : undefined
     };
 
     // Debug logging for signup data

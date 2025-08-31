@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaCog } from "react-icons/fa";
 import { useAuth } from '@/components/common/AuthContext';
 import { signOut } from 'next-auth/react';
 import { FiChevronDown, FiUser, FiSettings, FiLogOut, FiGrid } from 'react-icons/fi';
@@ -174,6 +174,9 @@ const Navbar = () => {
                           Dashboard
                         </Link>
                       )}
+                      <Link href="/settings" className="px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                        <FaCog className="text-lg sm:text-xl" /> Settings
+                      </Link>
                       <Link
                         href="/profile"
                         className="px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2"

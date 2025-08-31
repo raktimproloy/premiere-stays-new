@@ -136,9 +136,23 @@ export default function MainSection(props: MainSectionProps) {
     const [checkOutDate, setCheckOutDate] = useState<Date | null>(null);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [suppressClose, setSuppressClose] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState<'error' | 'warning' | 'info'>('info');
     const checkInRef = useRef<DatePicker>(null);
     const checkOutRef = useRef<DatePicker>(null);
     const guestsRef = useRef<HTMLDivElement>(null);
+
+    const showToastFunction = (message: string, type: 'error' | 'warning' | 'info' = 'info') => {
+      setToastMessage(message);
+      setToastType(type);
+      setShowToast(true);
+      
+      // Auto-hide toast after 5 seconds
+      setTimeout(() => {
+        setShowToast(false);
+      }, 5000);
+    };
 
     const handleServiceChange = (service: keyof typeof services) => {
       setServices(prev => ({ ...prev, [service]: !prev[service] }));
@@ -254,7 +268,7 @@ export default function MainSection(props: MainSectionProps) {
       setSuppressClose(true);
     };
 
-    const handleBookNow = () => {
+    const handleBookNow = async () => {
       if (!isAuthenticated) {
         // Save booking path in cookies and redirect to login
         saveBookingPath({
@@ -267,13 +281,72 @@ export default function MainSection(props: MainSectionProps) {
           email: email
         });
         router.push('/login');
-      } else {
-        // User is logged in, proceed to checkout
+        return;
+      }
+
+      // Check if user has completed their settings
+      try {
+        const response = await fetch('/api/user/settings');
+        const data = await response.json();
+        
+        if (data.success && data.settings) {
+          const { billingAddress, propertyPreferences, socialMedia } = data.settings;
+          
+          // Check if billing address is complete
+          const hasBillingAddress = billingAddress && 
+            billingAddress.street && 
+            billingAddress.city && 
+            billingAddress.state && 
+            billingAddress.zipCode && 
+            billingAddress.country;
+          
+          // Check if property preferences are set
+          const hasPropertyPreferences = propertyPreferences && 
+            propertyPreferences.preferredLocation && 
+            propertyPreferences.propertyType && 
+            propertyPreferences.maxPrice > 0 && 
+            propertyPreferences.minBedrooms > 0;
+          
+          // Check if at least one social media profile is set
+          const hasSocialMedia = socialMedia && (
+            socialMedia.facebook || 
+            socialMedia.twitter || 
+            socialMedia.instagram || 
+            socialMedia.linkedin
+          );
+          
+          if (!hasBillingAddress || !hasPropertyPreferences || !hasSocialMedia) {
+            // Show toast message and redirect to settings
+            const missingFields = [];
+            if (!hasBillingAddress) missingFields.push('billing address');
+            if (!hasPropertyPreferences) missingFields.push('property preferences');
+            if (!hasSocialMedia) missingFields.push('social media profiles');
+            
+            // Show toast message and redirect to settings
+            showToastFunction(`Please complete your ${missingFields.join(', ')} in your account settings before proceeding.`, 'warning');
+            
+            // Redirect to settings page after a short delay
+            // setTimeout(() => {
+            //   router.push('/settings');
+            // }, 2000);
+            return;
+          }
+        }
+        
+        // All settings are complete, proceed to checkout
         if (searchId) {
           router.push(`/book-now/checkout/${id}?id=${searchId}`);
         } else {
           router.push(`/book-now/checkout/${id}`);
         }
+        
+      } catch (error) {
+        console.error('Error checking user settings:', error);
+        // If there's an error checking settings, show a message and redirect to settings
+        showToastFunction('Unable to verify your account settings. Please complete your profile in settings before proceeding.', 'error');
+        setTimeout(() => {
+          router.push('/settings');
+        }, 2000);
       }
     };
 
@@ -292,7 +365,29 @@ export default function MainSection(props: MainSectionProps) {
     }
     
     return (
-      <section className="max-w-7xl mx-auto p-2 md:p-6 lg:p-8">
+      <>
+        {/* Toast Notification */}
+        {showToast && (
+          <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg max-w-md transform transition-all duration-300 ${
+            toastType === 'error' ? 'bg-red-500 text-white' :
+            toastType === 'warning' ? 'bg-yellow-500 text-white' :
+            'bg-blue-500 text-white'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="font-medium">{toastMessage}</p>
+              </div>
+              <button
+                onClick={() => setShowToast(false)}
+                className="ml-4 text-white hover:text-gray-200 text-lg font-bold"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+        
+        <section className="max-w-7xl mx-auto p-2 md:p-6 lg:p-8">
         {/* Breadcrumb and Print Section */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center text-sm text-gray-600">
@@ -350,6 +445,7 @@ export default function MainSection(props: MainSectionProps) {
                     popperClassName="z-30"
                     open={activeDropdown === 'checkin'}
                     onClickOutside={() => { if (!suppressClose) setActiveDropdown(null); }}
+                    disabled
                   />
                 </div>
                 <div className="flex items-center px-2 text-gray-300 select-none">|</div>
@@ -370,6 +466,7 @@ export default function MainSection(props: MainSectionProps) {
                     popperClassName="z-30"
                     open={activeDropdown === 'checkout'}
                     onClickOutside={() => { if (!suppressClose) setActiveDropdown(null); }}
+                    disabled
                   />
                 </div>
               </div>
@@ -560,5 +657,6 @@ export default function MainSection(props: MainSectionProps) {
           </div>
         </div>
       </section>
+      </>
     );
 }

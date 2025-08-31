@@ -13,6 +13,16 @@ interface User {
   guestId?: string;
   role: string;
   registerType?: 'manual' | 'google';
+  // Admin-specific fields
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
+  // Business fields
+  proofOfOwnership?: string;
+  businessLicenseNumber?: string;
+  taxId?: string;
+  bankAccountInfo?: string;
+  taxForm?: string;
 }
 
 const Setting: React.FC = () => {
@@ -28,6 +38,22 @@ const Setting: React.FC = () => {
     fullName: '',
     phone: '',
     dob: ''
+  });
+
+  const [adminInfo, setAdminInfo] = useState({
+    contactPerson: '',
+    mailingAddress: '',
+    desiredService: '',
+    proofOfOwnership: '',
+    businessLicenseNumber: '',
+    taxId: '',
+    bankAccountInfo: '',
+    taxForm: ''
+  });
+
+  const [uploadingFiles, setUploadingFiles] = useState({
+    proofOfOwnership: false,
+    taxForm: false
   });
 
   const [passwordInfo, setPasswordInfo] = useState({
@@ -55,6 +81,20 @@ const Setting: React.FC = () => {
           phone: data.user.phone || '',
           dob: data.user.dob || ''
         });
+        
+        // Set admin-specific fields if user is admin
+        if (data.user.role === 'admin') {
+          setAdminInfo({
+            contactPerson: data.user.contactPerson || '',
+            mailingAddress: data.user.mailingAddress || '',
+            desiredService: data.user.desiredService || '',
+            proofOfOwnership: data.user.proofOfOwnership || '',
+            businessLicenseNumber: data.user.businessLicenseNumber || '',
+            taxId: data.user.taxId || '',
+            bankAccountInfo: data.user.bankAccountInfo || '',
+            taxForm: data.user.taxForm || ''
+          });
+        }
       } else {
         setError(data.error || 'Failed to fetch user data');
       }
@@ -97,6 +137,39 @@ const Setting: React.FC = () => {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, fileType: 'proofOfOwnership' | 'taxForm') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingFiles(prev => ({ ...prev, [fileType]: true }));
+      setError(null);
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileType', fileType);
+
+      const response = await fetch('/api/user/upload-file', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAdminInfo(prev => ({ ...prev, [fileType]: data.fileUrl }));
+        setSuccess(`${fileType === 'proofOfOwnership' ? 'Proof of ownership' : 'Tax form'} uploaded successfully!`);
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(data.message || `Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}`);
+      }
+    } catch (error) {
+      setError(`Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}`);
+    } finally {
+      setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
+    }
+  };
+
   const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -108,13 +181,20 @@ const Setting: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(personalInfo),
+        body: JSON.stringify({
+          ...personalInfo,
+          ...(user?.role === 'admin' && adminInfo)
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setUser(prev => prev ? { ...prev, ...personalInfo } : null);
+        setUser(prev => prev ? { 
+          ...prev, 
+          ...personalInfo,
+          ...(user?.role === 'admin' && adminInfo)
+        } : null);
         setSuccess('Profile updated successfully!');
         setTimeout(() => setSuccess(null), 3000);
       } else {
@@ -312,6 +392,260 @@ const Setting: React.FC = () => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+
+                {/* Admin-specific fields */}
+                {user?.role === 'admin' && (
+                  <>
+                    <div className="border-t border-gray-200 pt-6 mt-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Property Management Details</h3>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Contact Person <span className="text-gray-500">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter contact person name"
+                        value={adminInfo.contactPerson}
+                        onChange={(e) => setAdminInfo(prev => ({ ...prev, contactPerson: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Mailing Address <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="Enter your complete mailing address"
+                        value={adminInfo.mailingAddress}
+                        onChange={(e) => setAdminInfo(prev => ({ ...prev, mailingAddress: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 resize-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Desired Service <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            id="full-management"
+                            name="desiredService"
+                            value="full-management"
+                            checked={adminInfo.desiredService === 'full-management'}
+                            onChange={(e) => setAdminInfo(prev => ({ ...prev, desiredService: e.target.value }))}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                            required
+                          />
+                          <label htmlFor="full-management" className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                            <span>Full Management</span>
+                            <div className="relative group">
+                              <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                              </svg>
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                                Complete property management including marketing, bookings, maintenance, and guest communication
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            id="stage-and-manage"
+                            name="desiredService"
+                            value="stage-and-manage"
+                            checked={adminInfo.desiredService === 'stage-and-manage'}
+                            onChange={(e) => setAdminInfo(prev => ({ ...prev, desiredService: e.target.value }))}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                            required
+                          />
+                          <label htmlFor="stage-and-manage" className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                            <span>Stage and Manage</span>
+                            <div className="relative group">
+                              <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                              </svg>
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                                Property staging for optimal presentation and ongoing management services
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            id="custom-manage"
+                            name="desiredService"
+                            value="custom-manage"
+                            checked={adminInfo.desiredService === 'custom-manage'}
+                            onChange={(e) => setAdminInfo(prev => ({ ...prev, desiredService: e.target.value }))}
+                            className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300"
+                            required
+                          />
+                          <label htmlFor="custom-manage" className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                            <span>Custom Manage</span>
+                            <div className="relative group">
+                              <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                              </svg>
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+                                Tailored management services based on your specific needs and requirements
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Business Information */}
+                      <div className="border-t border-gray-200 pt-6 mt-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Business Information</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Proof of Ownership or Management Rights
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => handleFileUpload(e, 'proofOfOwnership')}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            disabled={uploadingFiles.proofOfOwnership}
+                          />
+                          {uploadingFiles.proofOfOwnership && (
+                            <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                              <Loader2 className="animate-spin" size={16} />
+                              Uploading...
+                            </div>
+                          )}
+                          {adminInfo.proofOfOwnership && !uploadingFiles.proofOfOwnership && (
+                            <div className="mt-2">
+                              {adminInfo.proofOfOwnership.startsWith('http') ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-green-600">✓ Uploaded successfully</span>
+                                  <a 
+                                    href={adminInfo.proofOfOwnership} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:underline"
+                                  >
+                                    View file
+                                  </a>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-gray-500">
+                                  Selected: {adminInfo.proofOfOwnership}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          <p className="mt-1 text-xs text-gray-500">
+                            Upload image or PDF (max 10MB)
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Local Registration or Business License Number
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter business license number"
+                            value={adminInfo.businessLicenseNumber}
+                            onChange={(e) => setAdminInfo(prev => ({ ...prev, businessLicenseNumber: e.target.value }))}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tax ID (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter tax ID"
+                          value={adminInfo.taxId}
+                          onChange={(e) => setAdminInfo(prev => ({ ...prev, taxId: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Bank Account Info
+                        </label>
+                        <textarea
+                          rows={4}
+                          placeholder="Enter bank name, account number, routing number, and account holder name"
+                          value={adminInfo.bankAccountInfo}
+                          onChange={(e) => setAdminInfo(prev => ({ ...prev, bankAccountInfo: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 resize-none"
+                          required
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          Include: Bank Name, Account Number, Routing Number, Account Holder Name
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tax Form
+                        </label>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => handleFileUpload(e, 'taxForm')}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          disabled={uploadingFiles.taxForm}
+                        />
+                        {uploadingFiles.taxForm && (
+                          <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                            <Loader2 className="animate-spin" size={16} />
+                            Uploading...
+                          </div>
+                        )}
+                        {adminInfo.taxForm && !uploadingFiles.taxForm && (
+                          <div className="mt-2">
+                            {adminInfo.taxForm.startsWith('http') ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-green-600">✓ Uploaded successfully</span>
+                                <a 
+                                  href={adminInfo.taxForm} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:underline"
+                                >
+                                  View file
+                                </a>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-500">
+                                Selected: {adminInfo.taxForm}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        <p className="mt-1 text-xs text-gray-500">
+                          Upload W-9, 1099, or other relevant tax forms (max 10MB)
+                        </p>
+                      </div>
+                      </div>
+                    </>
+                  )}
 
                 <button
                   type="submit"

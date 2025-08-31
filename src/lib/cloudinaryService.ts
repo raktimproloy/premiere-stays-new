@@ -282,6 +282,46 @@ export const cloudinaryService = {
     });
   },
 
+  // Helper method to upload document files (PDFs, docs, etc.)
+  async uploadDocumentFile(
+    file: File,
+    folder: string,
+    options: {
+      format?: string;
+    } = {}
+  ): Promise<any> {
+    // Convert File to buffer for Cloudinary
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Use upload_stream with raw resource type for documents
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: 'raw', // Use raw for documents
+          format: options.format || 'auto',
+        },
+        (error, uploadResult) => {
+          if (error) {
+            console.error('Cloudinary document upload stream error:', error);
+            reject(new Error(`Document upload stream failed: ${this.extractErrorMessage(error)}`));
+          } else if (uploadResult) {
+            resolve(uploadResult);
+          } else {
+            reject(new Error('Document upload stream completed but no result returned'));
+          }
+        }
+      );
+      
+      uploadStream.on('error', (streamError) => {
+        reject(new Error(`Document stream error: ${this.extractErrorMessage(streamError)}`));
+      });
+      
+      uploadStream.end(buffer);
+    });
+  },
+
   // Helper method to upload image buffers
   async uploadImageBuffer(
     buffer: Buffer,

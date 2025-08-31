@@ -12,6 +12,16 @@ interface User {
   dob: string;
   profileImage?: string;
   role: 'user' | 'admin' | 'superadmin';
+  // Admin-specific fields
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
+  // Business fields
+  proofOfOwnership?: string;
+  businessLicenseNumber?: string;
+  taxId?: string;
+  bankAccountInfo?: string;
+  taxForm?: string;
   createdAt: Date;
   emailVerified: boolean;
   lastLogin?: Date;
@@ -38,6 +48,15 @@ interface SignupData {
   password: string;
   profileImage?: string;
   role: string;
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
+  // Business fields
+  proofOfOwnership?: string;
+  businessLicenseNumber?: string;
+  taxId?: string;
+  bankAccountInfo?: string;
+  taxForm?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

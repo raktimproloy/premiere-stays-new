@@ -5,6 +5,7 @@ import { FaEdit, FaCog, FaQuestionCircle, FaEye, FaUser, FaEnvelope, FaPhone, Fa
 import { CameraIcon, EditIcon } from '../../../public/images/svg';
 import BookingDetailsModal from './BookingDetailsModal';
 import { formatDateForDisplay, isValidDateFormat } from '@/utils/dateUtils';
+import Link from 'next/link';
 
 interface User {
   _id: string;
@@ -16,6 +17,10 @@ interface User {
   guestId?: number;
   role: 'user' | 'admin' | 'superadmin';
   registerType?: 'manual' | 'google';
+  // Admin-specific fields
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -630,12 +635,12 @@ export default function Profile() {
 
         {/* Settings/Help */}
         <div className="md:col-span-3 flex flex-row sm:flex-col gap-3 sm:gap-4 justify-center bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <button className="flex items-center gap-2 text-gray-700 hover:text-blue-700 font-medium text-sm sm:text-base">
+          <Link href="/settings" className="flex items-center gap-2 text-gray-700 hover:text-blue-700 font-medium text-sm sm:text-base">
             <FaCog className="text-lg sm:text-xl" /> Settings
-          </button>
-          <button className="flex items-center gap-2 text-gray-700 hover:text-blue-700 font-medium text-sm sm:text-base">
+          </Link>
+          {/* <button className="flex items-center gap-2 text-gray-700 hover:text-blue-700 font-medium text-sm sm:text-base">
             <FaQuestionCircle className="text-lg sm:text-xl" /> Help
-          </button>
+          </button> */}
         </div>
       </div>
 

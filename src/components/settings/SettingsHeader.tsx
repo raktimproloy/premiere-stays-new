@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import React from 'react';
 import { FaCog, FaQuestionCircle } from 'react-icons/fa';
+import { FiUser } from 'react-icons/fi';
 
 export default function SettingsHeader() {
   return (
@@ -11,10 +13,10 @@ export default function SettingsHeader() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
             <p className="text-gray-600 text-sm sm:text-base">Manage your account preferences and settings</p>
           </div>
-          <div className="flex items-center gap-2 text-blue-600">
-            <FaCog className="text-lg sm:text-xl" />
-            <span className="font-medium text-sm sm:text-base">Settings</span>
-          </div>
+          <Link href="/profile" className="flex items-center gap-2 text-blue-600">
+            <FiUser className="text-gray-500" />
+            <span className="font-medium text-sm sm:text-base">Profile</span>
+          </Link>
         </div>
       </div>
 

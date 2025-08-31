@@ -108,7 +108,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { fullName, phone, dob, profileImage } = await request.json();
+    const { 
+      fullName, 
+      phone, 
+      dob, 
+      profileImage, 
+      contactPerson, 
+      mailingAddress, 
+      desiredService,
+      // Business fields
+      proofOfOwnership,
+      businessLicenseNumber,
+      taxId,
+      bankAccountInfo,
+      taxForm
+    } = await request.json();
 
     // Validate required fields
     if (!fullName || !phone || !dob) {
@@ -116,6 +130,24 @@ export async function PUT(request: NextRequest) {
         { success: false, message: 'Full name, phone, and date of birth are required' },
         { status: 400 }
       );
+    }
+
+    // Validate admin-specific fields if user is admin
+    if (result.user.role === 'admin') {
+      if (!mailingAddress || !desiredService) {
+        return NextResponse.json(
+          { success: false, message: 'Mailing address and desired service are required for admin users' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate new required business fields
+      if (!proofOfOwnership || !businessLicenseNumber || !bankAccountInfo || !taxForm) {
+        return NextResponse.json(
+          { success: false, message: 'Proof of ownership, business license number, bank account info, and tax form are required for admin users' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate phone format (basic validation)
@@ -150,6 +182,19 @@ export async function PUT(request: NextRequest) {
     // Add profile image if provided
     if (profileImage) {
       updateData.profileImage = profileImage;
+    }
+
+    // Add admin-specific fields if user is admin
+    if (result.user.role === 'admin') {
+      updateData.contactPerson = contactPerson || '';
+      updateData.mailingAddress = mailingAddress || '';
+      updateData.desiredService = desiredService || '';
+      // Business fields
+      updateData.proofOfOwnership = proofOfOwnership || '';
+      updateData.businessLicenseNumber = businessLicenseNumber || '';
+      updateData.taxId = taxId || '';
+      updateData.bankAccountInfo = bankAccountInfo || '';
+      updateData.taxForm = taxForm || '';
     }
 
     // Update user in MongoDB

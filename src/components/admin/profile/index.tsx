@@ -14,6 +14,16 @@ interface User {
   profileImage?: string;
   guestId?: string;
   role: string;
+  // Admin-specific fields
+  contactPerson?: string;
+  mailingAddress?: string;
+  desiredService?: string;
+  // Business fields
+  proofOfOwnership?: string;
+  businessLicenseNumber?: string;
+  taxId?: string;
+  bankAccountInfo?: string;
+  taxForm?: string;
 }
 
 const ProfilePage = ({role}: {role: string}) => {
@@ -189,6 +199,80 @@ const ProfilePage = ({role}: {role: string}) => {
                   <td className="text-gray-400">Date of Birth</td>
                   <td className="font-semibold text-gray-900">
                     {user.dob ? new Date(user.dob).toLocaleDateString() : 'N/A'}
+                  </td>
+                </tr>
+                <tr><td colSpan={2} className="h-4"></td></tr>
+                <tr>
+                  <th colSpan={2} className="text-xl font-semibold text-gray-900 pb-2 pt-0">Property Management Details</th>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Contact Person</td>
+                  <td className="font-semibold text-gray-900">{user.contactPerson || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Mailing Address</td>
+                  <td className="font-semibold text-gray-900">{user.mailingAddress || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Desired Service</td>
+                  <td className="font-semibold text-gray-900">{user.desiredService || 'N/A'}</td>
+                </tr>
+                <tr><td colSpan={2} className="h-4"></td></tr>
+                <tr>
+                  <th colSpan={2} className="text-xl font-semibold text-gray-900 pb-2 pt-0">Business Information</th>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Business License</td>
+                  <td className="font-semibold text-gray-900">{user.businessLicenseNumber || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Tax ID</td>
+                  <td className="font-semibold text-gray-900">{user.taxId || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Bank Account Info</td>
+                  <td className="font-semibold text-gray-900">
+                    <div className="max-w-xs truncate" title={user.bankAccountInfo}>
+                      {user.bankAccountInfo || 'N/A'}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Proof of Ownership</td>
+                  <td className="font-semibold text-gray-900">
+                    {user.proofOfOwnership ? (
+                      user.proofOfOwnership.startsWith('http') ? (
+                        <a 
+                          href={user.proofOfOwnership} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View Document
+                        </a>
+                      ) : (
+                        user.proofOfOwnership
+                      )
+                    ) : 'N/A'}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="text-gray-400">Tax Form</td>
+                  <td className="font-semibold text-gray-900">
+                    {user.taxForm ? (
+                      user.taxForm.startsWith('http') ? (
+                        <a 
+                          href={user.taxForm} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View Document
+                        </a>
+                      ) : (
+                        user.taxForm
+                      )
+                    ) : 'N/A'}
                   </td>
                 </tr>
                 <tr><td colSpan={2} className="h-4"></td></tr>

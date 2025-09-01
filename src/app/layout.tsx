@@ -6,6 +6,7 @@ import SessionProvider from "@/components/common/SessionProvider";
 import Script from "next/script";
 import PagePreloader from "@/components/common/PagePreloader";
 import { Toaster } from 'react-hot-toast';
+import { NotificationProvider } from "@/components/common/NotificationContext";
 
 // ✅ Load the Inter Tight font
 const interTight = Inter_Tight({
@@ -38,7 +39,9 @@ export default function RootLayout({
         <PagePreloader>
           <SessionProvider>
             <AuthProvider>
-              {children}
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
             </AuthProvider>
           </SessionProvider>
         </PagePreloader>

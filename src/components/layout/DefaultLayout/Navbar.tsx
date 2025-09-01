@@ -19,6 +19,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const Logo = '/images/logo.png';
+  const defaultImage = '/images/default_profile.png';
   
   // Single useAuth call to get all needed values
   const { isAuthenticated, logout, loading, user: authUser, role } = useAuth();
@@ -134,7 +135,7 @@ const Navbar = () => {
                   aria-expanded={dropdownOpen}
                 >
                   <Image
-                    src={authUser?.profileImage || profileImage}
+                    src={authUser?.profileImage || defaultImage}
                     alt="Profile"
                     className="w-8 h-8 xl:w-10 xl:h-10 rounded-full object-cover border-2 border-gray-200"
                     width={40}

@@ -13,7 +13,7 @@ const ProfilePage = () => {
     supportNumber: '+1 (404) 123-4567',
     address: '2345 Peachtree St, Atlanta'
   });
-
+  const defaultImage = '/images/default_profile.png';
   const [isEditing, setIsEditing] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
@@ -39,7 +39,7 @@ const ProfilePage = () => {
           <div className=" flex-shrink-0">
             <div className="w-28 h-28 relative bg-gray-200 rounded-full flex items-center justify-center ">
               <img 
-                src="/images/profile2.jpg" 
+                src={defaultImage} 
                 alt="Profile" 
                 className="w-full h-full object-cover rounded-full"
               />

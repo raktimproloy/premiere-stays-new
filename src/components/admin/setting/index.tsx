@@ -2,6 +2,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Edit2, Save, Loader2, Lock } from 'lucide-react';
 import { CameraIcon, EditIcon } from '../../../../public/images/svg';
+import { useNotificationHelpers } from '@/components/common/NotificationContext';
+
+interface FileMetadata {
+  url: string;
+  publicId: string;
+  originalFileName: string;
+  fileExtension: string;
+  fileNameWithoutExtension: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: Date;
+}
 
 interface User {
   _id: string;
@@ -18,11 +30,11 @@ interface User {
   mailingAddress?: string;
   desiredService?: string;
   // Business fields
-  proofOfOwnership?: string;
+  proofOfOwnership?: string | FileMetadata;
   businessLicenseNumber?: string;
   taxId?: string;
   bankAccountInfo?: string;
-  taxForm?: string;
+  taxForm?: string | FileMetadata;
 }
 
 const Setting: React.FC = () => {
@@ -33,6 +45,7 @@ const Setting: React.FC = () => {
   const [savingPassword, setSavingPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { showSuccess, showError } = useNotificationHelpers();
   
   const [personalInfo, setPersonalInfo] = useState({
     fullName: '',
@@ -44,11 +57,11 @@ const Setting: React.FC = () => {
     contactPerson: '',
     mailingAddress: '',
     desiredService: '',
-    proofOfOwnership: '',
+    proofOfOwnership: '' as string | FileMetadata,
     businessLicenseNumber: '',
     taxId: '',
     bankAccountInfo: '',
-    taxForm: ''
+    taxForm: '' as string | FileMetadata
   });
 
   const [uploadingFiles, setUploadingFiles] = useState({
@@ -125,13 +138,12 @@ const Setting: React.FC = () => {
 
       if (response.ok) {
         setUser(prev => prev ? { ...prev, profileImage: data.imageUrl } : null);
-        setSuccess('Profile image updated successfully!');
-        setTimeout(() => setSuccess(null), 3000);
+        showSuccess('Profile Image Updated', 'Your profile image has been updated successfully!');
       } else {
-        setError(data.error || 'Failed to upload image');
+        showError('Upload Failed', data.error || 'Failed to upload image');
       }
     } catch (error) {
-      setError('Failed to upload image');
+      showError('Upload Failed', 'Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(false);
     }
@@ -157,16 +169,62 @@ const Setting: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setAdminInfo(prev => ({ ...prev, [fileType]: data.fileUrl }));
-        setSuccess(`${fileType === 'proofOfOwnership' ? 'Proof of ownership' : 'Tax form'} uploaded successfully!`);
-        setTimeout(() => setSuccess(null), 3000);
+        // Store the file metadata object instead of just the URL
+        setAdminInfo(prev => ({ ...prev, [fileType]: data.fileMetadata }));
+        showSuccess(
+          'File Uploaded', 
+          `${fileType === 'proofOfOwnership' ? 'Proof of ownership' : 'Tax form'} uploaded successfully!`
+        );
       } else {
-        setError(data.message || `Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}`);
+        showError(
+          'Upload Failed', 
+          data.message || `Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}`
+        );
       }
     } catch (error) {
-      setError(`Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}`);
+      showError(
+        'Upload Failed', 
+        `Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}. Please try again.`
+      );
     } finally {
       setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
+    }
+  };
+
+  const handleFileDownload = async (fileType: 'proofOfOwnership' | 'taxForm') => {
+    try {
+      const response = await fetch(`/api/user/download-file?fileType=${fileType}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        // Get the filename from the Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `${fileType}_${Date.now()}`;
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        // Create blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to download file');
+      }
+    } catch (error) {
+      setError('Failed to download file');
     }
   };
 
@@ -176,15 +234,32 @@ const Setting: React.FC = () => {
       setSaving(true);
       setError(null);
 
+      // Prepare the data to send, handling file metadata
+      const profileData = {
+        ...personalInfo,
+        ...(user?.role === 'admin' && {
+          contactPerson: adminInfo.contactPerson,
+          mailingAddress: adminInfo.mailingAddress,
+          desiredService: adminInfo.desiredService,
+          businessLicenseNumber: adminInfo.businessLicenseNumber,
+          taxId: adminInfo.taxId,
+          bankAccountInfo: adminInfo.bankAccountInfo,
+          // For file fields, send the URL if it's a string, or the URL from metadata if it's an object
+          proofOfOwnership: typeof adminInfo.proofOfOwnership === 'string' 
+            ? adminInfo.proofOfOwnership 
+            : (adminInfo.proofOfOwnership as FileMetadata)?.url || '',
+          taxForm: typeof adminInfo.taxForm === 'string' 
+            ? adminInfo.taxForm 
+            : (adminInfo.taxForm as FileMetadata)?.url || ''
+        })
+      };
+
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...personalInfo,
-          ...(user?.role === 'admin' && adminInfo)
-        }),
+        body: JSON.stringify(profileData),
       });
 
       const data = await response.json();
@@ -195,13 +270,12 @@ const Setting: React.FC = () => {
           ...personalInfo,
           ...(user?.role === 'admin' && adminInfo)
         } : null);
-        setSuccess('Profile updated successfully!');
-        setTimeout(() => setSuccess(null), 3000);
+        showSuccess('Profile Updated', 'Your profile has been updated successfully!');
       } else {
-        setError(data.error || 'Failed to update profile');
+        showError('Update Failed', data.error || 'Failed to update profile');
       }
     } catch (error) {
-      setError('Failed to update profile');
+      showError('Update Failed', 'Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -241,13 +315,12 @@ const Setting: React.FC = () => {
           newPassword: '',
           confirmPassword: ''
         });
-        setSuccess('Password updated successfully!');
-        setTimeout(() => setSuccess(null), 3000);
+        showSuccess('Password Updated', 'Your password has been updated successfully!');
       } else {
-        setError(data.error || 'Failed to update password');
+        showError('Password Update Failed', data.error || 'Failed to update password');
       }
     } catch (error) {
-      setError('Failed to update password');
+      showError('Password Update Failed', 'Failed to update password. Please try again.');
     } finally {
       setSavingPassword(false);
     }
@@ -513,7 +586,7 @@ const Setting: React.FC = () => {
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Business Information</h3>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Proof of Ownership or Management Rights
@@ -533,22 +606,37 @@ const Setting: React.FC = () => {
                           )}
                           {adminInfo.proofOfOwnership && !uploadingFiles.proofOfOwnership && (
                             <div className="mt-2">
-                              {adminInfo.proofOfOwnership.startsWith('http') ? (
+                              {typeof adminInfo.proofOfOwnership === 'string' ? (
+                                adminInfo.proofOfOwnership.startsWith('http') ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-green-600">✓ Uploaded successfully</span>
+                                    
+                                    <button
+                                      onClick={() => handleFileDownload('proofOfOwnership')}
+                                      className="text-xs text-green-600 hover:underline"
+                                    >
+                                      Download
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-gray-500">
+                                    Selected: {adminInfo.proofOfOwnership}
+                                  </p>
+                                )
+                              ) : (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-green-600">✓ Uploaded successfully</span>
-                                  <a 
-                                    href={adminInfo.proofOfOwnership} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:underline"
+                                  
+                                  <button
+                                    onClick={() => handleFileDownload('proofOfOwnership')}
+                                    className="text-xs text-green-600 hover:underline"
                                   >
-                                    View file
-                                  </a>
+                                    Download
+                                  </button>
+                                  <span className="text-xs text-gray-500">
+                                    ({adminInfo.proofOfOwnership.originalFileName})
+                                  </span>
                                 </div>
-                              ) : (
-                                <p className="text-xs text-gray-500">
-                                  Selected: {adminInfo.proofOfOwnership}
-                                </p>
                               )}
                             </div>
                           )}
@@ -620,22 +708,37 @@ const Setting: React.FC = () => {
                         )}
                         {adminInfo.taxForm && !uploadingFiles.taxForm && (
                           <div className="mt-2">
-                            {adminInfo.taxForm.startsWith('http') ? (
+                            {typeof adminInfo.taxForm === 'string' ? (
+                              adminInfo.taxForm.startsWith('http') ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-green-600">✓ Uploaded successfully</span>
+                                  
+                                  <button
+                                    onClick={() => handleFileDownload('taxForm')}
+                                    className="text-xs text-green-600 hover:underline"
+                                  >
+                                    Download
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-gray-500">
+                                  Selected: {adminInfo.taxForm}
+                                </p>
+                              )
+                            ) : (
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-green-600">✓ Uploaded successfully</span>
-                                <a 
-                                  href={adminInfo.taxForm} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-blue-600 hover:underline"
+                                
+                                <button
+                                  onClick={() => handleFileDownload('taxForm')}
+                                  className="text-xs text-green-600 hover:underline"
                                 >
-                                  View file
-                                </a>
+                                  Download
+                                </button>
+                                <span className="text-xs text-gray-500">
+                                  ({adminInfo.taxForm.originalFileName})
+                                </span>
                               </div>
-                            ) : (
-                              <p className="text-xs text-gray-500">
-                                Selected: {adminInfo.taxForm}
-                              </p>
                             )}
                           </div>
                         )}

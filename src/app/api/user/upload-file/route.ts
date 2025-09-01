@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth';
 import { cloudinaryService } from '@/lib/cloudinaryService';
+import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,23 +77,62 @@ export async function POST(request: NextRequest) {
       // Upload to Cloudinary
       const folder = fileType === 'proofOfOwnership' ? 'admin/proof-of-ownership' : 'admin/tax-forms';
       
-             let uploadResult;
-       if (file.type.startsWith('image/')) {
-         uploadResult = await cloudinaryService.uploadImageFile(file, folder);
-       } else if (file.type === 'application/pdf' || file.type.startsWith('application/')) {
-         // For PDFs and documents, use uploadDocumentFile
-         uploadResult = await cloudinaryService.uploadDocumentFile(file, folder);
-       } else {
-         // For any other file types, try document upload as fallback
-         uploadResult = await cloudinaryService.uploadDocumentFile(file, folder);
-       }
+      let uploadResult;
+      if (file.type.startsWith('image/')) {
+        uploadResult = await cloudinaryService.uploadImageFile(file, folder);
+      } else if (file.type === 'application/pdf' || file.type.startsWith('application/')) {
+        // For PDFs and documents, use uploadDocumentFile
+        uploadResult = await cloudinaryService.uploadDocumentFile(file, folder);
+      } else {
+        // For any other file types, try document upload as fallback
+        uploadResult = await cloudinaryService.uploadDocumentFile(file, folder);
+      }
+
+      // Extract file extension from original filename
+      const originalFileName = file.name;
+      const fileExtension = originalFileName.split('.').pop() || '';
+      const fileNameWithoutExtension = originalFileName.replace(/\.[^/.]+$/, '');
+
+      // Create file metadata object
+      const fileMetadata = {
+        url: uploadResult.url,
+        publicId: uploadResult.public_id,
+        originalFileName: originalFileName,
+        fileExtension: fileExtension,
+        fileNameWithoutExtension: fileNameWithoutExtension,
+        fileSize: file.size,
+        mimeType: file.type,
+        uploadedAt: new Date()
+      };
+
+      // Update user's file information in MongoDB
+      const client = await clientPromise;
+      const db = client.db("premiere-stays");
+
+      const updateResult = await db.collection("users").updateOne(
+        { _id: new ObjectId(result.user._id) },
+        { 
+          $set: { 
+            [fileType]: fileMetadata,
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      if (updateResult.matchedCount === 0) {
+        return NextResponse.json(
+          { success: false, message: 'Failed to update user file information' },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json({
         success: true,
         message: 'File uploaded successfully',
         fileUrl: uploadResult.url,
         publicId: uploadResult.public_id,
-        fileType: fileType
+        fileType: fileType,
+        fileMetadata: fileMetadata
       });
 
     } catch (cloudinaryError) {

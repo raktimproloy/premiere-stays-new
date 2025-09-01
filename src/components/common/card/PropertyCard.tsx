@@ -37,7 +37,7 @@ export default function PropertyCard({property, searchId, showPrice = true}: {pr
         if (showPrice) {
           router.push(`/book-now/${property.id}${searchId ? `?id=${searchId}` : ''}`);
         } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          router.push(`/properties/${property.id}`);
         }
       }}
       key={property.id}

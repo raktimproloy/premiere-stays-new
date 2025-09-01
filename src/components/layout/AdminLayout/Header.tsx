@@ -3,10 +3,13 @@ import { useAuth } from '@/components/common/AuthContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useRef, useEffect } from 'react';
-import { FiMenu, FiX, FiMessageCircle, FiBell, FiChevronDown, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
+import { FiMenu, FiX, FiMessageCircle, FiChevronDown, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
+import NotificationDropdown from '@/components/common/NotificationDropdown';
+import NotificationDemo from '@/components/common/NotificationDemo';
 
 const profileImage = "/images/profile.jpg"; // Default profile image
+const defaultImage = '/images/default_profile.png';
 const searchIcon = "/images/icons/search.svg";
 const notificationIcon = "/images/icons/notification.svg";
 const chatIcon = "/images/icons/chat.svg";
@@ -162,6 +165,12 @@ export default function Header({ sidebarOpen, setSidebarOpen, userData, currentP
                 <Image src={searchIcon} alt="Search" width={24} height={24} />
               </button>
             )}
+            
+            {/* Notification Dropdown */}
+            <div className="relative">
+              <NotificationDropdown />
+            </div>
+            
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -170,7 +179,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, userData, currentP
                 aria-expanded={dropdownOpen}
               >
                 <Image
-                  src={profileImage}
+                  src={userData.profileImage || defaultImage}
                   alt="Profile"
                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
                   width={40}

@@ -189,12 +189,44 @@ export async function PUT(request: NextRequest) {
       updateData.contactPerson = contactPerson || '';
       updateData.mailingAddress = mailingAddress || '';
       updateData.desiredService = desiredService || '';
-      // Business fields
-      updateData.proofOfOwnership = proofOfOwnership || '';
+      // Business fields - preserve existing file metadata if it exists
+      if (proofOfOwnership) {
+        // Check if the user already has file metadata for this field
+        const existingUser = await db.collection("users").findOne({
+          _id: new ObjectId(result.user._id)
+        });
+        
+        if (existingUser && existingUser.proofOfOwnership && typeof existingUser.proofOfOwnership === 'object') {
+          // Update the URL in the existing metadata
+          updateData.proofOfOwnership = {
+            ...existingUser.proofOfOwnership,
+            url: proofOfOwnership
+          };
+        } else {
+          updateData.proofOfOwnership = proofOfOwnership;
+        }
+      }
+      
+      if (taxForm) {
+        // Check if the user already has file metadata for this field
+        const existingUser = await db.collection("users").findOne({
+          _id: new ObjectId(result.user._id)
+        });
+        
+        if (existingUser && existingUser.taxForm && typeof existingUser.taxForm === 'object') {
+          // Update the URL in the existing metadata
+          updateData.taxForm = {
+            ...existingUser.taxForm,
+            url: taxForm
+          };
+        } else {
+          updateData.taxForm = taxForm;
+        }
+      }
+      
       updateData.businessLicenseNumber = businessLicenseNumber || '';
       updateData.taxId = taxId || '';
       updateData.bankAccountInfo = bankAccountInfo || '';
-      updateData.taxForm = taxForm || '';
     }
 
     // Update user in MongoDB

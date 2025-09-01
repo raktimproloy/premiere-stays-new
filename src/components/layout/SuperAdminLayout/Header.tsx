@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const profileImage = "/images/profile.jpg"; // Default profile image
+const defaultImage = '/images/default_profile.png';
 const searchIcon = "/images/icons/search.svg";
 const notificationIcon = "/images/icons/notification.svg";
 const chatIcon = "/images/icons/chat.svg";
@@ -171,7 +172,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, userData, currentP
                 aria-expanded={dropdownOpen}
               >
                 <Image
-                  src={profileImage}
+                  src={userData.profileImage || defaultImage}
                   alt="Profile"
                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
                   width={40}

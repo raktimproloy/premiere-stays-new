@@ -1,13 +1,8 @@
 {
-  "timestamp": 1756651821585,
+  "timestamp": 1756700943564,
   "data": {
     "role": "admin",
     "previousRevenue": [
-      {
-        "amount": 4861,
-        "month": 9,
-        "year": 2024
-      },
       {
         "amount": 6886,
         "month": 10,
@@ -19,7 +14,7 @@
         "year": 2024
       },
       {
-        "amount": 7886.33,
+        "amount": 11761.33,
         "month": 12,
         "year": 2024
       },
@@ -44,7 +39,7 @@
         "year": 2025
       },
       {
-        "amount": 10897,
+        "amount": 11447,
         "month": 5,
         "year": 2025
       },
@@ -54,7 +49,7 @@
         "year": 2025
       },
       {
-        "amount": 0,
+        "amount": 2499,
         "month": 7,
         "year": 2025
       },
@@ -62,14 +57,14 @@
         "amount": 3759.17,
         "month": 8,
         "year": 2025
+      },
+      {
+        "amount": 1559,
+        "month": 9,
+        "year": 2025
       }
     ],
     "occupancyTrends": [
-      {
-        "month": "Sep",
-        "year": 2024,
-        "value": 3.67
-      },
       {
         "month": "Oct",
         "year": 2024,
@@ -83,7 +78,7 @@
       {
         "month": "Dec",
         "year": 2024,
-        "value": 5.48
+        "value": 6.77
       },
       {
         "month": "Jan",
@@ -108,7 +103,7 @@
       {
         "month": "May",
         "year": 2025,
-        "value": 9.35
+        "value": 10
       },
       {
         "month": "Jun",
@@ -118,12 +113,17 @@
       {
         "month": "Jul",
         "year": 2025,
-        "value": 0
+        "value": 2.26
       },
       {
         "month": "Aug",
         "year": 2025,
         "value": 4.9
+      },
+      {
+        "month": "Sep",
+        "year": 2025,
+        "value": 3
       }
     ],
     "bookingSources": {
@@ -136,12 +136,6 @@
       ]
     },
     "nightlyRates": [
-      {
-        "monthName": "Sep",
-        "year": 2024,
-        "totalNights": 11,
-        "ratePerNight": 441.91
-      },
       {
         "monthName": "Oct",
         "year": 2024,
@@ -157,8 +151,8 @@
       {
         "monthName": "Dec",
         "year": 2024,
-        "totalNights": 17,
-        "ratePerNight": 463.9
+        "totalNights": 21,
+        "ratePerNight": 560.06
       },
       {
         "monthName": "Jan",
@@ -187,8 +181,8 @@
       {
         "monthName": "May",
         "year": 2025,
-        "totalNights": 29,
-        "ratePerNight": 375.76
+        "totalNights": 31,
+        "ratePerNight": 369.26
       },
       {
         "monthName": "Jun",
@@ -199,14 +193,20 @@
       {
         "monthName": "Jul",
         "year": 2025,
-        "totalNights": 0,
-        "ratePerNight": 0
+        "totalNights": 7,
+        "ratePerNight": 357
       },
       {
         "monthName": "Aug",
         "year": 2025,
         "totalNights": 15,
         "ratePerNight": 250.61
+      },
+      {
+        "monthName": "Sep",
+        "year": 2025,
+        "totalNights": 9,
+        "ratePerNight": 173.22
       }
     ],
     "bookings": [
@@ -5915,24 +5915,135 @@
         "updated_utc": "2025-08-10T13:23:31Z"
       },
       {
-        "adults": 5,
-        "arrival": "2024-09-26",
-        "booked_utc": "2024-09-08T21:42:19Z",
+        "adults": 12,
+        "arrival": "2024-12-27",
+        "booked_utc": "2024-12-13T22:24:10Z",
         "charges": [
           {
-            "amount": 1335,
+            "amount": 3875,
             "commission_amount": 0,
             "description": "Rent",
             "is_channel_managed": true,
             "is_commission_all": false,
             "is_expense_all": false,
             "is_taxable": true,
-            "owner_amount": 1335,
+            "owner_amount": 3875,
             "owner_commission_percent": 0,
             "position": 0,
-            "rate": 1335,
+            "rate": 3875,
             "rate_is_percent": false,
             "type": "rent"
+          },
+          {
+            "amount": 400,
+            "commission_amount": 0,
+            "description": "Cleaning fee",
+            "is_channel_managed": true,
+            "is_commission_all": false,
+            "is_expense_all": false,
+            "is_taxable": true,
+            "owner_amount": 400,
+            "owner_commission_percent": 0,
+            "position": 1,
+            "rate": 400,
+            "rate_is_percent": false,
+            "type": "surcharge_other"
+          }
+        ],
+        "check_in": "15:00",
+        "check_out": "11:00",
+        "children": 0,
+        "created_utc": "2025-08-07T15:07:02Z",
+        "currency_code": "USD",
+        "departure": "2024-12-29",
+        "form_key": "3e71d368a2dc4c35a08a140746d01ade",
+        "guest_id": 617949060,
+        "id": 14637103,
+        "infants": 0,
+        "is_block": false,
+        "listing_site": "Airbnb",
+        "pets": 0,
+        "platform_reservation_number": "HMHHPJZ8Q9",
+        "property": {
+          "id": 460000,
+          "name": "Wynwood Townhomes w/Heated Pools"
+        },
+        "property_id": 460000,
+        "status": "active",
+        "thread_ids": [
+          8669088
+        ],
+        "total_amount": 4275,
+        "total_host_fees": 128.25,
+        "total_paid": 4275,
+        "type": "booking",
+        "updated_utc": "2025-08-10T13:21:51Z"
+      },
+      {
+        "adults": 12,
+        "arrival": "2024-12-20",
+        "booked_utc": "2024-09-11T21:00:59Z",
+        "canceled_utc": "2025-08-07T15:07:01Z",
+        "check_in": "15:00",
+        "check_out": "11:00",
+        "children": 0,
+        "created_utc": "2025-08-07T15:07:01Z",
+        "currency_code": "USD",
+        "departure": "2024-12-22",
+        "form_key": "5b8bd309cd8b49eaae65ad3fcb281991",
+        "guest_id": 617949059,
+        "id": 14637101,
+        "infants": 0,
+        "is_block": false,
+        "listing_site": "Airbnb",
+        "pets": 0,
+        "platform_reservation_number": "HMJHQHKW3T",
+        "property": {
+          "id": 460000,
+          "name": "Wynwood Townhomes w/Heated Pools"
+        },
+        "property_id": 460000,
+        "status": "canceled",
+        "thread_ids": [
+          8669087
+        ],
+        "type": "booking",
+        "updated_utc": "2025-08-10T13:21:50Z"
+      },
+      {
+        "adults": 4,
+        "arrival": "2025-07-08",
+        "booked_utc": "2025-07-08T02:36:55Z",
+        "charges": [
+          {
+            "amount": 2499,
+            "commission_amount": 0,
+            "description": "Rent",
+            "is_channel_managed": true,
+            "is_commission_all": false,
+            "is_expense_all": false,
+            "is_taxable": true,
+            "owner_amount": 2499,
+            "owner_commission_percent": 0,
+            "position": 0,
+            "rate": 2499,
+            "rate_is_percent": false,
+            "type": "rent"
+          },
+          {
+            "amount": -55,
+            "commission_amount": 0,
+            "description": "Last-minute discount",
+            "is_channel_managed": true,
+            "is_commission_all": false,
+            "is_expense_all": false,
+            "is_taxable": true,
+            "owner_amount": -55,
+            "owner_commission_percent": 0,
+            "position": 1,
+            "rate": -55,
+            "rate_is_percent": false,
+            "type": "surcharge_other"
           },
           {
             "amount": 250,
@@ -5944,23 +6055,8 @@
             "is_taxable": true,
             "owner_amount": 250,
             "owner_commission_percent": 0,
-            "position": 1,
-            "rate": 250,
-            "rate_is_percent": false,
-            "type": "surcharge_other"
-          },
-          {
-            "amount": -142.66,
-            "commission_amount": 0,
-            "description": "Resolution adjustment for resolution 34969354",
-            "is_channel_managed": true,
-            "is_commission_all": false,
-            "is_expense_all": false,
-            "is_taxable": false,
-            "owner_amount": -142.66,
-            "owner_commission_percent": 0,
             "position": 2,
-            "rate": -142.66,
+            "rate": 250,
             "rate_is_percent": false,
             "type": "surcharge_other"
           }
@@ -5968,52 +6064,66 @@
         "check_in": "15:00",
         "check_out": "11:00",
         "children": 1,
-        "created_utc": "2025-08-07T15:09:00Z",
+        "created_utc": "2025-08-07T15:06:45Z",
         "currency_code": "USD",
-        "departure": "2024-09-29",
-        "form_key": "b7cda2e68edc4ec59b30dc2c27d80ffa",
-        "guest_id": 617949210,
-        "id": 14637217,
+        "departure": "2025-07-15",
+        "form_key": "6a747b01b8a8428fb8934dda4b7004d0",
+        "guest_id": 617547890,
+        "id": 14637097,
         "infants": 0,
         "is_block": false,
         "listing_site": "Airbnb",
         "pets": 0,
-        "platform_reservation_number": "HMR42MPFWC",
+        "platform_reservation_number": "HM252BD8TX",
         "property": {
-          "id": 459940,
-          "name": "Wynwood/Design District TH w/heated Pool"
+          "id": 459941,
+          "name": "Modern Design District Wynwood TH w/Heated Pool"
         },
-        "property_id": 459940,
+        "property_id": 459941,
         "status": "active",
         "thread_ids": [
-          8669202
+          8669070
         ],
-        "total_amount": 1442.34,
-        "total_host_fees": 47.55,
-        "total_paid": 1585,
-        "total_refunded": 142.66,
+        "total_amount": 2694,
+        "total_host_fees": 80.82,
+        "total_paid": 2694,
         "type": "booking",
-        "updated_utc": "2025-08-10T13:23:29Z"
+        "updated_utc": "2025-08-10T13:21:32Z"
       },
       {
-        "adults": 7,
-        "arrival": "2024-09-19",
-        "booked_utc": "2024-08-22T00:13:07Z",
+        "adults": 2,
+        "arrival": "2025-05-27",
+        "booked_utc": "2025-05-26T02:55:39Z",
         "charges": [
           {
-            "amount": 1522,
+            "amount": 550,
             "commission_amount": 0,
             "description": "Rent",
             "is_channel_managed": true,
             "is_commission_all": false,
             "is_expense_all": false,
             "is_taxable": true,
-            "owner_amount": 1522,
+            "owner_amount": 550,
             "owner_commission_percent": 0,
             "position": 0,
-            "rate": 1522,
+            "rate": 550,
             "rate_is_percent": false,
             "type": "rent"
+          },
+          {
+            "amount": -27.5,
+            "commission_amount": 0,
+            "description": "Last-minute discount",
+            "is_channel_managed": true,
+            "is_commission_all": false,
+            "is_expense_all": false,
+            "is_taxable": true,
+            "owner_amount": -27.5,
+            "owner_commission_percent": 0,
+            "position": 1,
+            "rate": -27.5,
+            "rate_is_percent": false,
+            "type": "surcharge_other"
           },
           {
             "amount": 250,
@@ -6024,154 +6134,9 @@
             "is_expense_all": false,
             "is_taxable": true,
             "owner_amount": 250,
-            "owner_commission_percent": 0,
-            "position": 1,
-            "rate": 250,
-            "rate_is_percent": false,
-            "type": "surcharge_other"
-          }
-        ],
-        "check_in": "15:00",
-        "check_out": "11:00",
-        "children": 0,
-        "created_utc": "2025-08-07T15:08:59Z",
-        "currency_code": "USD",
-        "departure": "2024-09-22",
-        "form_key": "eae2e4df799e4453829dfd46acdadee6",
-        "guest_id": 617949209,
-        "id": 14637216,
-        "infants": 0,
-        "is_block": false,
-        "listing_site": "Airbnb",
-        "pets": 0,
-        "platform_reservation_number": "HM4TEJ9RQD",
-        "property": {
-          "id": 459940,
-          "name": "Wynwood/Design District TH w/heated Pool"
-        },
-        "property_id": 459940,
-        "status": "active",
-        "thread_ids": [
-          8669201
-        ],
-        "total_amount": 1772,
-        "total_host_fees": 53.16,
-        "total_paid": 1772,
-        "type": "booking",
-        "updated_utc": "2025-08-10T13:23:28Z"
-      },
-      {
-        "adults": 7,
-        "arrival": "2024-09-12",
-        "booked_utc": "2024-03-27T03:45:17Z",
-        "charges": [
-          {
-            "amount": 1504,
-            "commission_amount": 0,
-            "description": "Rent",
-            "is_channel_managed": true,
-            "is_commission_all": false,
-            "is_expense_all": false,
-            "is_taxable": true,
-            "owner_amount": 1504,
-            "owner_commission_percent": 0,
-            "position": 0,
-            "rate": 1504,
-            "rate_is_percent": false,
-            "type": "rent"
-          },
-          {
-            "amount": 250,
-            "commission_amount": 0,
-            "description": "Cleaning fee",
-            "is_channel_managed": true,
-            "is_commission_all": false,
-            "is_expense_all": false,
-            "is_taxable": true,
-            "owner_amount": 250,
-            "owner_commission_percent": 0,
-            "position": 1,
-            "rate": 250,
-            "rate_is_percent": false,
-            "type": "surcharge_other"
-          }
-        ],
-        "check_in": "15:00",
-        "check_out": "11:00",
-        "children": 0,
-        "created_utc": "2025-08-07T15:08:58Z",
-        "currency_code": "USD",
-        "departure": "2024-09-15",
-        "form_key": "c70791a82dfc486c9539ffc57c90aefc",
-        "guest_id": 617949205,
-        "id": 14637215,
-        "infants": 0,
-        "is_block": false,
-        "listing_site": "Airbnb",
-        "pets": 0,
-        "platform_reservation_number": "HMNT3HAQ5K",
-        "property": {
-          "id": 459940,
-          "name": "Wynwood/Design District TH w/heated Pool"
-        },
-        "property_id": 459940,
-        "status": "active",
-        "thread_ids": [
-          8669200
-        ],
-        "total_amount": 1754,
-        "total_host_fees": 52.62,
-        "total_paid": 1754,
-        "type": "booking",
-        "updated_utc": "2025-08-10T13:23:27Z"
-      },
-      {
-        "adults": 3,
-        "arrival": "2024-09-11",
-        "booked_utc": "2024-09-11T14:20:30Z",
-        "charges": [
-          {
-            "amount": 250,
-            "commission_amount": 0,
-            "description": "Rent",
-            "is_channel_managed": true,
-            "is_commission_all": false,
-            "is_expense_all": false,
-            "is_taxable": true,
-            "owner_amount": 250,
-            "owner_commission_percent": 0,
-            "position": 0,
-            "rate": 250,
-            "rate_is_percent": false,
-            "type": "rent"
-          },
-          {
-            "amount": 250,
-            "commission_amount": 0,
-            "description": "Cleaning fee",
-            "is_channel_managed": true,
-            "is_commission_all": false,
-            "is_expense_all": false,
-            "is_taxable": true,
-            "owner_amount": 250,
-            "owner_commission_percent": 0,
-            "position": 1,
-            "rate": 250,
-            "rate_is_percent": false,
-            "type": "surcharge_other"
-          },
-          {
-            "amount": -170,
-            "commission_amount": 0,
-            "description": "Resolution adjustment for resolution 34361130",
-            "is_channel_managed": true,
-            "is_commission_all": false,
-            "is_expense_all": false,
-            "is_taxable": false,
-            "owner_amount": -170,
             "owner_commission_percent": 0,
             "position": 2,
-            "rate": -170,
+            "rate": 250,
             "rate_is_percent": false,
             "type": "surcharge_other"
           }
@@ -6179,32 +6144,31 @@
         "check_in": "15:00",
         "check_out": "11:00",
         "children": 0,
-        "created_utc": "2025-08-07T15:08:57Z",
+        "created_utc": "2025-08-07T15:06:27Z",
         "currency_code": "USD",
-        "departure": "2024-09-12",
-        "form_key": "5c99c191c8e7407bb0246ee56aaa9871",
-        "guest_id": 617949204,
-        "id": 14637214,
+        "departure": "2025-05-29",
+        "form_key": "ebf22ca65e5744b0959ff5df9693f8c9",
+        "guest_id": 617949006,
+        "id": 14637077,
         "infants": 0,
         "is_block": false,
         "listing_site": "Airbnb",
         "pets": 0,
-        "platform_reservation_number": "HMEAXADHQA",
+        "platform_reservation_number": "HMYPXJQ8JZ",
         "property": {
-          "id": 459940,
-          "name": "Wynwood/Design District TH w/heated Pool"
+          "id": 459941,
+          "name": "Modern Design District Wynwood TH w/Heated Pool"
         },
-        "property_id": 459940,
+        "property_id": 459941,
         "status": "active",
         "thread_ids": [
-          8669199
+          8669044
         ],
-        "total_amount": 330,
-        "total_host_fees": 15,
-        "total_paid": 500,
-        "total_refunded": 170,
+        "total_amount": 772.5,
+        "total_host_fees": 23.18,
+        "total_paid": 772.5,
         "type": "booking",
-        "updated_utc": "2025-08-10T13:23:26Z"
+        "updated_utc": "2025-08-10T13:21:13Z"
       }
     ]
   }

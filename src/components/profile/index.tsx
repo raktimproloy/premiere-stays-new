@@ -53,7 +53,7 @@ export default function Profile() {
   const [success, setSuccess] = useState<string | null>(null);
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
-  
+  const defaultImage = '/images/default_profile.png';
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -565,7 +565,7 @@ export default function Profile() {
           <div className="flex lg:flex-row flex-col items-center gap-4">
             <div className="relative">
               <Image 
-                src={user.profileImage || '/images/profile.jpg'} 
+                src={user.profileImage || defaultImage} 
                 alt="Profile" 
                 width={100} 
                 height={100} 

@@ -34,7 +34,7 @@ const ProfilePage = ({role}: {role: string}) => {
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-
+  const defaultImage = '/images/default_profile.png';
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -151,7 +151,7 @@ const ProfilePage = ({role}: {role: string}) => {
           <div className="flex-shrink-0">
             <div className="w-28 h-28 relative bg-gray-200 rounded-full flex items-center justify-center">
               <img 
-                src={user.profileImage || "/images/profile2.jpg"} 
+                src={user.profileImage || defaultImage} 
                 alt="Profile" 
                 className="w-full h-full object-cover rounded-full"
               />

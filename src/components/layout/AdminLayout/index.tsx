@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from "./Header";
 import RoleProtection from '@/components/common/RoleProtection';
+import CrispChat from '@/components/common/CrispChat';
 
 interface UserData {
   _id: string;
@@ -95,7 +96,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <RoleProtection requiredRole="admin">
-      <div className="flex h-screen bg-gray-50">
+      <div className="relative flex h-screen bg-gray-50">
+        <CrispChat />
         {/* Mobile sidebar overlay */}
         {sidebarOpen && isMobile && (
           <div 

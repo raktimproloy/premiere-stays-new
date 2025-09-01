@@ -43,6 +43,13 @@ async function fetchBookings(start: string, end: string): Promise<Booking[]> {
     }
 
     const data = await res.json();
+    
+    // Check if data.items exists and is an array
+    if (!data.items || !Array.isArray(data.items)) {
+      console.error('Invalid response format:', data);
+      break;
+    }
+    
     bookings.push(...data.items);
     
     if (data.items.length < limit) break;

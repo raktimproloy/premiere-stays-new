@@ -66,6 +66,7 @@ export default function Sidebar({
     { title: 'Users', link: '/superadmin/users', icon: <ProfileIcon /> },
     { title: 'Contact Messages', link: '/superadmin/contact-messages', icon: <ProfileIcon /> },
     { title: 'Chat Messages', link: '/superadmin/chat-messages', icon: <ProfileIcon /> },
+    { title: 'Help Messages', link: '/superadmin/help-messages', icon: <ProfileIcon /> },
   ];
 
   // Superadmin navigation items

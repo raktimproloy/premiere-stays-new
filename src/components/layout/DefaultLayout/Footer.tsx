@@ -4,9 +4,14 @@ import React from 'react';
 import { useMainSettings } from '@/hooks/useMainSettings';
 import { BlueCallIcon } from '../../../../public/images/svg';
 import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 
 
 const FooterSection = () => {
+
+  const pathname = usePathname();
+  const router = useRouter();
+  console.log(pathname)
   const { settings, loading } = useMainSettings();
       const CTAImage = "/images/cta_image.png"
     const Logo = "/images/logo.png"
@@ -186,6 +191,10 @@ const FooterSection = () => {
 <div className="relative pt-40">
       {/* Footer */}
       <footer className="bg-[#100A55] text-white pt-44 sm:pt-50 md:pt-64 pb-8 sm:pb-12 relative">
+
+        {
+          pathname !== "/book-now" ? 
+
         <div className="absolute top-0 left-0 right-0 z-10 max-w-7xl mx-auto px-4 pt-4 sm:px-6 lg:px-8 -mt-40 sm:-mt-36 md:-mt-32">
           <div className="bg-[#586DF7] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
             <div className="">
@@ -197,7 +206,7 @@ const FooterSection = () => {
                   <p className="text-sm sm:text-base lg:text-lg text-blue-100 max-w-xl mb-4 sm:mb-6">
                     Browse our available rentals and secure your stay with just a few clicks. Whether you're planning a weekend getaway or a longer stay, we've got the perfect space waiting for you.
                   </p>
-                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className=" bg-[#F7B730] text-black hover:bg-[#F7B730]/80 font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-sm sm:text-base lg:text-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center">
+                  <button onClick={() => router.push("/book-now")} className=" bg-[#F7B730] text-black hover:bg-[#F7B730]/80 font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-sm sm:text-base lg:text-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center">
                     Book A Property
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -211,6 +220,10 @@ const FooterSection = () => {
             </div>
           </div>
         </div>
+          : ""
+        }
+
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-6 sm:gap-8 mb-8 sm:mb-12">
             {/* Brand */}

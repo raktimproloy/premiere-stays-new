@@ -319,6 +319,7 @@ export default function Profile() {
     }
   };
 
+  console.log(user)
   if (loading) {
     return (
       <div className="bg-[#F8F9FB] min-h-screen py-6 sm:py-8 px-2 sm:px-4 md:px-8 flex items-center justify-center">
@@ -417,7 +418,7 @@ export default function Profile() {
                 <div className="flex items-center border border-[#1C88FF1A] rounded-lg px-3 py-2 bg-gray-50">
                   <FaCalendar className="text-gray-400 mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                   <input
-                    type="text"
+                    type="date"
                     name="dob"
                     value={form.dob}
                     onChange={handleChange}
@@ -622,7 +623,7 @@ export default function Profile() {
                 <div className="flex items-center gap-2 text-gray-900 mb-1 font-semibold text-sm sm:text-base">Phone Number</div>
                 <div className="text-gray-600 text-sm sm:text-base">{user.phone}</div>
               </div>
-                              <div>
+                <div>
                   <div className="flex items-center gap-2 text-gray-900 mb-1 font-semibold text-sm sm:text-base">Date of Birth</div>
                   <div className="text-gray-600 text-sm sm:text-base">{formatDateForDisplay(user.dob)}</div>
                 </div>

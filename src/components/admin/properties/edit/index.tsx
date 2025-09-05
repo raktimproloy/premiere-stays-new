@@ -62,7 +62,9 @@ export default function EditPropertyPage() {
   const [fileUploaded, setFileUploaded] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<Array<{ url: string; publicId?: string; alt?: string; isPrimary?: boolean }>>([]);
+  const [removedExistingPublicIds, setRemovedExistingPublicIds] = useState<string[]>([]);
+  const [localPropertyId, setLocalPropertyId] = useState<string | null>(null);
 
   // Fetch property data on component mount
   useEffect(() => {
@@ -102,10 +104,21 @@ export default function EditPropertyPage() {
       setCheckIn(property.check_in || '15:00');
       setCheckOut(property.check_out || '11:00');
       setIsActive(property.active !== false);
+      // Prefill editor with local description if available
+      const localDescription = (property as any)?.localData?.description || (property as any)?.description || '';
+      setEditorValue(localDescription);
+      // Capture local Mongo _id for image operations
+      setLocalPropertyId(data.localId || (property as any)?.localData?._id || null);
       
       // Set existing images
-      if (property.thumbnail_url) {
-        setExistingImages([property.thumbnail_url]);
+      const localImagesFromMerged: Array<{ url: string; publicId?: string; alt?: string; isPrimary?: boolean }> = (property as any)?.localData?.images || [];
+      const localImagesOnly: Array<{ url: string; publicId?: string; alt?: string; isPrimary?: boolean }> = (data?.source === 'local_only' ? (property as any)?.images : []) || [];
+      if (localImagesFromMerged.length > 0) {
+        setExistingImages(localImagesFromMerged);
+      } else if (localImagesOnly.length > 0) {
+        setExistingImages(localImagesOnly);
+      } else if (property.thumbnail_url) {
+        setExistingImages([{ url: property.thumbnail_url }]);
       }
 
     } catch (err) {
@@ -134,6 +147,39 @@ export default function EditPropertyPage() {
     setError(null);
 
     try {
+      // First, handle image deletions (local DB + Cloudinary)
+      if (localPropertyId && removedExistingPublicIds.length > 0) {
+        try {
+          const delRes = await fetch('/api/properties/upload-images', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: localPropertyId, imagePublicIds: removedExistingPublicIds })
+          });
+          if (!delRes.ok) {
+            const delErr = await delRes.json();
+            console.warn('Failed to delete some images:', delErr);
+          }
+        } catch (imgDelErr) {
+          console.warn('Image deletion error:', imgDelErr);
+        }
+      }
+
+      // Then, handle new image uploads
+      if (localPropertyId && uploadedFiles.length > 0) {
+        try {
+          const formData = new FormData();
+          formData.append('propertyId', localPropertyId);
+          uploadedFiles.forEach(f => formData.append('images', f));
+          const upRes = await fetch('/api/properties/upload-images', { method: 'POST', body: formData });
+          if (!upRes.ok) {
+            const upErr = await upRes.json();
+            console.warn('Failed to upload some images:', upErr);
+          }
+        } catch (imgUpErr) {
+          console.warn('Image upload error:', imgUpErr);
+        }
+      }
+
       const payload = {
         name: propertyName,
         address: {
@@ -153,6 +199,9 @@ export default function EditPropertyPage() {
         active: isActive,
         check_in: checkIn,
         check_out: checkOut,
+        // Include rich text for local DB mapping
+        editorValue: editorValue,
+        details: editorValue,
         calendar_color: "FF0000",
         days_before_arrival_for_check: 5,
         days_before_arrival_for_custom: 1,
@@ -242,7 +291,13 @@ export default function EditPropertyPage() {
 
   // Remove existing image
   const removeExistingImage = (index: number) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== index));
+    setExistingImages(prev => {
+      const img = prev[index];
+      if (img?.publicId) {
+        setRemovedExistingPublicIds(ids => Array.from(new Set([...ids, img.publicId as string])));
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   if (fetching) {
@@ -548,10 +603,10 @@ export default function EditPropertyPage() {
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Current Images:</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {existingImages.map((url, index) => (
+                    {existingImages.map((img, index) => (
                       <div key={index} className="relative group">
                         <img
-                          src={url}
+                          src={img.url}
                           alt={`Property image ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg border border-gray-200"
                         />

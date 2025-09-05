@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { FiEye, FiPlus, FiChevronLeft, FiChevronRight, FiSearch, FiCheck, FiX } from 'react-icons/fi';
 import PropertyDetailModal from '@/components/common/PropertyDetailModal';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Property {
   id: string;
   name: string;
   type?: string;
+  images?: string[];
   property_type?: string;
   bathrooms: number;
   bedrooms: number;
@@ -43,6 +45,7 @@ const PropertyRequestList = ({role}: {role: string}) => {
   const totalPages = Math.ceil(total / itemsPerPage);
   
   const openModal = (property: Property) => {
+    console.log("propertylist",property)
     setSelectedProperty(property);
     setIsModalOpen(true);
   };
@@ -134,6 +137,7 @@ const PropertyRequestList = ({role}: {role: string}) => {
         throw new Error(data.error || data.message || 'Failed to fetch properties');
       }
       const data = await response.json();
+      console.log("data",data)
       if (data.success) {
         setProperties(data.properties || []);
         setTotal(data.total || 0);
@@ -155,6 +159,7 @@ const PropertyRequestList = ({role}: {role: string}) => {
 
   // Filter properties based on status and search term (client-side)
   useEffect(() => {
+    console.log("propertiesee",properties)
     let result = [...properties];
     
     // Apply status filter
@@ -181,6 +186,16 @@ const PropertyRequestList = ({role}: {role: string}) => {
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+    }
+  };
+
+  const router = useRouter();
+
+  const handleEditbutton = (propertyId: string) => {
+    if (role === "superadmin") {
+      router.push(`/superadmin/properties/edit/${propertyId}`);
+    } else {
+      router.push(`/admin/properties/edit/${propertyId}`);
     }
   };
   
@@ -515,11 +530,11 @@ const PropertyRequestList = ({role}: {role: string}) => {
         property={selectedProperty as Property | any}
         editUrl={role === "superadmin" ? `/superadmin/properties/edit/${selectedProperty?.id}` : `/admin/properties/edit/${selectedProperty?.id}`}
         editLabel="Edit Property"
-        editActive={selectedProperty?.status !== 'Pending'}
-        onEditClick={() => { /* custom logic */ }}
+        editActive={true}
+        onEditClick={() => {}}
         footerActions={[
-          { label: 'Reject', active: canManageAllProperties && selectedProperty?.status === 'Pending', color: '#FF4545', onClick: () => selectedProperty && handleReject(selectedProperty.id) },
-          { label: 'Approve', active: canManageAllProperties && selectedProperty?.status === 'Pending', color: '#40C557', onClick: () => selectedProperty && handleApprove(selectedProperty.id) }
+          // { label: 'Reject', active: canManageAllProperties && selectedProperty?.status === 'Pending', color: '#FF4545', onClick: () => selectedProperty && handleReject(selectedProperty.id) },
+          // { label: 'Approve', active: canManageAllProperties && selectedProperty?.status === 'Pending', color: '#40C557', onClick: () => selectedProperty && handleApprove(selectedProperty.id) }
         ]}
       />
     </div>

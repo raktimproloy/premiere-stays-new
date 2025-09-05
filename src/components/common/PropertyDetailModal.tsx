@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 import { FiX, FiEdit, FiUser, FiHome, FiCalendar, FiCreditCard } from 'react-icons/fi';
+import { formatDateForDisplay } from '@/utils/dateUtils';
 
 interface Property {
   id: string;
@@ -18,7 +19,7 @@ interface Property {
 interface PropertyDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  property: Property | null;
+  property: Property | any;
   editUrl?: string;
   editLabel?: string;
   editActive?: boolean;
@@ -64,25 +65,26 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
     };
   }, [isOpen, onClose]);
 
+  console.log("property",property)
+
   // Mock booking data for demonstration
   const mockBooking = {
     person: {
-      name: "Rafhim Rafat",
-      email: "rafhim.rafat@gmail.com",
-      phone: "880 1012754876"
+      name: property?.owner?.name || "",
+      email: property?.owner?.email || "",
+      phone: property?.owner?.phone || ""
     },
+    images: property?.images || [],
     property: {
-      name: property?.name || "Wynwood Townhomes w/Heated Pools",
-      location: "Miami, Miami-Dade County, Florida, United States",
-      bathrooms: `${property?.bathrooms || 6} Bathroom`,
-      bedrooms: `${property?.bedrooms || 6} Bedroom`,
-      type: property?.type || "Villa",
-      capacity: property?.capacity || "6 Guest",
-      extraServices: "Breakfast, Lunch",
-      price: property?.price || "$340 (Two Night)"
+      name: property?.name || "",
+      location: property?.address?.street1 || "",
+      bathrooms: `${property?.bathrooms || 0} Bathroom`,
+      bedrooms: `${property?.bedrooms || 0} Bedroom`,
+      type: property?.type || "",
+      capacity: property?.capacity || "",
+      price: property?.price || ""
     },
-    paymentMethod: "Paypal",
-    applyDate: "10-08-2025"
+    applyDate:property?.createdAt || "10-08-2025"
   };
 
   if (!isOpen || !property) return null;
@@ -135,9 +137,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                   <div className="px-3 sm:px-6 py-6">
                     {/* Property Images */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-8">
-                      {[1, 2, 3, 4].map((index) => (
+                      {mockBooking.images.map((image: any, index: number) => (
                         <div key={index} className="aspect-square rounded-2xl overflow-hidden">
-                          <img src={`/images/hotel.png`} alt="property" className="h-full w-full object-cover" />
+                          <img src={image.url} alt="property" className="h-full w-full object-cover" />
                         </div>
                       ))}
                     </div>
@@ -157,10 +159,6 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                           <tr>
                             <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Person Phone:</td>
                             <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.person.phone}</td>
-                          </tr>
-                          <tr>
-                            <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Person Name:</td>
-                            <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.person.name}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -197,21 +195,21 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                             <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Capacity:</td>
                             <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.property.capacity}</td>
                           </tr>
-                          <tr>
+                          {/* <tr>
                             <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Extra Services:</td>
                             <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.property.extraServices}</td>
-                          </tr>
-                          <tr>
+                          </tr> */}
+                          {/* <tr>
                             <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Price:</td>
                             <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.property.price}</td>
-                          </tr>
-                          <tr>
+                          </tr> */}
+                          {/* <tr>
                             <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Payment Method:</td>
                             <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.paymentMethod}</td>
-                          </tr>
+                          </tr> */}
                           <tr>
                             <td className="font-medium text-gray-700 py-1 pr-4 whitespace-nowrap">Apply Date:</td>
-                            <td className="text-gray-500 py-1 whitespace-nowrap">{mockBooking.applyDate}</td>
+                            <td className="text-gray-500 py-1 whitespace-nowrap">{formatDateForDisplay(mockBooking.applyDate)}</td>
                           </tr>
                         </tbody>
                       </table>

@@ -4,10 +4,11 @@
  * @returns Formatted date string
  */
 export function formatDateForDisplay(dateString: string): string {
+  console.log("dateString",dateString)
   if (!dateString) return '';
   
   try {
-    const [month, day, year] = dateString.split('-');
+    const [year, month, day] = dateString.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
     return date.toLocaleDateString('en-US', {

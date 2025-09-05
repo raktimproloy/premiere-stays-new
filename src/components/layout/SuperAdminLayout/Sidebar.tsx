@@ -56,7 +56,7 @@ export default function Sidebar({
   // Main navigation items
   const mainNavItems: NavItem[] = [
     { title: 'Dashboard', link: '/superadmin/dashboard', icon: <DashboardIcon /> },
-    { title: 'Business Request', link: '/superadmin/business-request', icon: <BusinessRequestIcon /> },
+    // { title: 'Business Request', link: '/superadmin/business-request', icon: <BusinessRequestIcon /> },
     { title: 'Manage Property', link: '/superadmin/properties', icon: <PropertyIcon /> },
     { title: 'Property Request', link: '/superadmin/property-request', icon: <PropertyIcon /> },
     { title: 'Bookings', link: '/superadmin/bookings', icon: <BookingIcon /> },

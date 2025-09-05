@@ -22,9 +22,9 @@ export default function SettingsHeader() {
 
       {/* Help Section */}
       <div className="md:col-span-3 flex flex-row sm:flex-col gap-3 sm:gap-4 justify-center bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-        <button className="flex items-center gap-2 text-gray-700 hover:text-blue-700 font-medium text-sm sm:text-base">
+        <Link href="/contact" className="flex items-center gap-2 text-gray-700 hover:text-blue-700 font-medium text-sm sm:text-base">
           <FaQuestionCircle className="text-lg sm:text-xl" /> Help
-        </button>
+        </Link>
       </div>
     </div>
   );

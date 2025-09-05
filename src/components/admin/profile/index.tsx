@@ -93,6 +93,34 @@ const ProfilePage = ({role}: {role: string}) => {
     router.push(role === "superadmin" ? '/superadmin/settings' : '/admin/settings');
   };
 
+  const renderDocument = (value: any) => {
+    if (!value) return 'N/A';
+    if (typeof value === 'string') {
+      return value.startsWith('http') ? (
+        <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document</a>
+      ) : (
+        value
+      );
+    }
+    if (Array.isArray(value)) {
+      return (
+        <div className="space-y-1">
+          {value.map((v, i) => (
+            <div key={i}>{renderDocument(v)}</div>
+          ))}
+        </div>
+      );
+    }
+    if (typeof value === 'object') {
+      const url = (value as any).url || (value as any).link || (value as any).href;
+      if (typeof url === 'string') {
+        return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document</a>;
+      }
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
   if (loading) {
     return (
       <div className="bg-gray-50 flex items-center justify-center py-12 min-h-screen">
@@ -222,10 +250,6 @@ const ProfilePage = ({role}: {role: string}) => {
                   <th colSpan={2} className="text-xl font-semibold text-gray-900 pb-2 pt-0">Business Information</th>
                 </tr>
                 <tr>
-                  <td className="text-gray-400">Business License</td>
-                  <td className="font-semibold text-gray-900">{user.businessLicenseNumber || 'N/A'}</td>
-                </tr>
-                <tr>
                   <td className="text-gray-400">Tax ID</td>
                   <td className="font-semibold text-gray-900">{user.taxId || 'N/A'}</td>
                 </tr>
@@ -238,44 +262,12 @@ const ProfilePage = ({role}: {role: string}) => {
                   </td>
                 </tr>
                 <tr>
-                  <td className="text-gray-400">Proof of Ownership</td>
-                  <td className="font-semibold text-gray-900">
-                    {user.proofOfOwnership ? (
-                      user.proofOfOwnership.startsWith('http') ? (
-                        <a 
-                          href={user.proofOfOwnership} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          View Document
-                        </a>
-                      ) : (
-                        user.proofOfOwnership
-                      )
-                    ) : 'N/A'}
-                  </td>
-                </tr>
-                <tr>
                   <td className="text-gray-400">Tax Form</td>
                   <td className="font-semibold text-gray-900">
-                    {user.taxForm ? (
-                      user.taxForm.startsWith('http') ? (
-                        <a 
-                          href={user.taxForm} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          View Document
-                        </a>
-                      ) : (
-                        user.taxForm
-                      )
-                    ) : 'N/A'}
+                    {renderDocument(user.taxForm)}
                   </td>
                 </tr>
-                <tr><td colSpan={2} className="h-4"></td></tr>
+                {/* <tr><td colSpan={2} className="h-4"></td></tr>
                 <tr>
                   <th colSpan={2} className="text-xl font-semibold text-gray-900 pb-2 pt-0">Support</th>
                 </tr>
@@ -290,7 +282,7 @@ const ProfilePage = ({role}: {role: string}) => {
                 <tr>
                   <td className="text-gray-400">Address</td>
                   <td className="font-semibold text-gray-900">2345 Peachtree St, Atlanta</td>
-                </tr>
+                </tr> */}
               </tbody>
             </table>
           </div>

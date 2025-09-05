@@ -30,8 +30,6 @@ interface User {
   mailingAddress?: string;
   desiredService?: string;
   // Business fields
-  proofOfOwnership?: string | FileMetadata;
-  businessLicenseNumber?: string;
   taxId?: string;
   bankAccountInfo?: string;
   taxForm?: string | FileMetadata;
@@ -57,15 +55,12 @@ const Setting: React.FC = () => {
     contactPerson: '',
     mailingAddress: '',
     desiredService: '',
-    proofOfOwnership: '' as string | FileMetadata,
-    businessLicenseNumber: '',
     taxId: '',
     bankAccountInfo: '',
     taxForm: '' as string | FileMetadata
   });
 
   const [uploadingFiles, setUploadingFiles] = useState({
-    proofOfOwnership: false,
     taxForm: false
   });
 
@@ -101,8 +96,6 @@ const Setting: React.FC = () => {
             contactPerson: data.user.contactPerson || '',
             mailingAddress: data.user.mailingAddress || '',
             desiredService: data.user.desiredService || '',
-            proofOfOwnership: data.user.proofOfOwnership || '',
-            businessLicenseNumber: data.user.businessLicenseNumber || '',
             taxId: data.user.taxId || '',
             bankAccountInfo: data.user.bankAccountInfo || '',
             taxForm: data.user.taxForm || ''
@@ -149,7 +142,7 @@ const Setting: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, fileType: 'proofOfOwnership' | 'taxForm') => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, fileType: 'taxForm') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -173,25 +166,25 @@ const Setting: React.FC = () => {
         setAdminInfo(prev => ({ ...prev, [fileType]: data.fileMetadata }));
         showSuccess(
           'File Uploaded', 
-          `${fileType === 'proofOfOwnership' ? 'Proof of ownership' : 'Tax form'} uploaded successfully!`
+          `Tax form uploaded successfully!`
         );
       } else {
         showError(
           'Upload Failed', 
-          data.message || `Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}`
+          data.message || 'Failed to upload tax form'
         );
       }
     } catch (error) {
       showError(
         'Upload Failed', 
-        `Failed to upload ${fileType === 'proofOfOwnership' ? 'proof of ownership' : 'tax form'}. Please try again.`
+        'Failed to upload tax form. Please try again.'
       );
     } finally {
       setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
     }
   };
 
-  const handleFileDownload = async (fileType: 'proofOfOwnership' | 'taxForm') => {
+  const handleFileDownload = async (fileType: 'taxForm') => {
     try {
       const response = await fetch(`/api/user/download-file?fileType=${fileType}`, {
         method: 'GET',
@@ -241,13 +234,8 @@ const Setting: React.FC = () => {
           contactPerson: adminInfo.contactPerson,
           mailingAddress: adminInfo.mailingAddress,
           desiredService: adminInfo.desiredService,
-          businessLicenseNumber: adminInfo.businessLicenseNumber,
           taxId: adminInfo.taxId,
           bankAccountInfo: adminInfo.bankAccountInfo,
-          // For file fields, send the URL if it's a string, or the URL from metadata if it's an object
-          proofOfOwnership: typeof adminInfo.proofOfOwnership === 'string' 
-            ? adminInfo.proofOfOwnership 
-            : (adminInfo.proofOfOwnership as FileMetadata)?.url || '',
           taxForm: typeof adminInfo.taxForm === 'string' 
             ? adminInfo.taxForm 
             : (adminInfo.taxForm as FileMetadata)?.url || ''
@@ -586,78 +574,7 @@ const Setting: React.FC = () => {
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Business Information</h3>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Proof of Ownership or Management Rights
-                          </label>
-                          <input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => handleFileUpload(e, 'proofOfOwnership')}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            disabled={uploadingFiles.proofOfOwnership}
-                          />
-                          {uploadingFiles.proofOfOwnership && (
-                            <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
-                              <Loader2 className="animate-spin" size={16} />
-                              Uploading...
-                            </div>
-                          )}
-                          {adminInfo.proofOfOwnership && !uploadingFiles.proofOfOwnership && (
-                            <div className="mt-2">
-                              {typeof adminInfo.proofOfOwnership === 'string' ? (
-                                adminInfo.proofOfOwnership.startsWith('http') ? (
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-green-600">✓ Uploaded successfully</span>
-                                    
-                                    <button
-                                      onClick={() => handleFileDownload('proofOfOwnership')}
-                                      className="text-xs text-green-600 hover:underline"
-                                    >
-                                      Download
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-gray-500">
-                                    Selected: {adminInfo.proofOfOwnership}
-                                  </p>
-                                )
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-green-600">✓ Uploaded successfully</span>
-                                  
-                                  <button
-                                    onClick={() => handleFileDownload('proofOfOwnership')}
-                                    className="text-xs text-green-600 hover:underline"
-                                  >
-                                    Download
-                                  </button>
-                                  <span className="text-xs text-gray-500">
-                                    ({adminInfo.proofOfOwnership.originalFileName})
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          <p className="mt-1 text-xs text-gray-500">
-                            Upload image or PDF (max 10MB)
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Local Registration or Business License Number
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Enter business license number"
-                            value={adminInfo.businessLicenseNumber}
-                            onChange={(e) => setAdminInfo(prev => ({ ...prev, businessLicenseNumber: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
-                          />
-                        </div>
-                      </div>
+                      {/* Proof of Ownership and Business License fields removed */}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">

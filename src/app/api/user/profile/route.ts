@@ -108,6 +108,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const body = await request.json();
     const { 
       fullName, 
       phone, 
@@ -116,39 +117,31 @@ export async function PUT(request: NextRequest) {
       contactPerson, 
       mailingAddress, 
       desiredService,
-      // Business fields
-      proofOfOwnership,
-      businessLicenseNumber,
+      // Business fields (reduced)
       taxId,
       bankAccountInfo,
       taxForm
-    } = await request.json();
+    } = body;
 
-    // Validate required fields
-    if (!fullName || !phone || !dob) {
-      return NextResponse.json(
-        { success: false, message: 'Full name, phone, and date of birth are required' },
-        { status: 400 }
-      );
-    }
+    // Relaxed validation: allow partial updates
 
     // Validate admin-specific fields if user is admin
-    if (result.user.role === 'admin') {
-      if (!mailingAddress || !desiredService) {
-        return NextResponse.json(
-          { success: false, message: 'Mailing address and desired service are required for admin users' },
-          { status: 400 }
-        );
-      }
+    // if (result.user.role === 'admin') {
+    //   if (!mailingAddress || !desiredService) {
+    //     return NextResponse.json(
+    //       { success: false, message: 'Mailing address and desired service are required for admin users' },
+    //       { status: 400 }
+    //     );
+    //   }
       
-      // Validate new required business fields
-      if (!proofOfOwnership || !businessLicenseNumber || !bankAccountInfo || !taxForm) {
-        return NextResponse.json(
-          { success: false, message: 'Proof of ownership, business license number, bank account info, and tax form are required for admin users' },
-          { status: 400 }
-        );
-      }
-    }
+    //   // Validate new required business fields
+    //   if (!proofOfOwnership || !businessLicenseNumber || !bankAccountInfo || !taxForm) {
+    //     return NextResponse.json(
+    //       { success: false, message: 'Proof of ownership, business license number, bank account info, and tax form are required for admin users' },
+    //       { status: 400 }
+    //     );
+    //   }
+    // }
 
     // Validate phone format (basic validation)
     // const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
@@ -173,15 +166,15 @@ export async function PUT(request: NextRequest) {
 
     // Prepare update data for MongoDB
     const updateData: any = {
-      fullName,
-      phone,
-      dob,
       updatedAt: new Date()
     };
+    if (typeof fullName === 'string' && fullName.trim().length > 0) updateData.fullName = fullName.trim();
+    if (typeof phone === 'string' && phone.trim().length > 0) updateData.phone = phone.trim();
+    if (typeof dob === 'string') updateData.dob = dob;
 
     // Add profile image if provided
-    if (profileImage) {
-      updateData.profileImage = profileImage;
+    if (typeof profileImage === 'string' && profileImage.trim().length > 0) {
+      updateData.profileImage = profileImage.trim();
     }
 
     // Add admin-specific fields if user is admin
@@ -189,24 +182,7 @@ export async function PUT(request: NextRequest) {
       updateData.contactPerson = contactPerson || '';
       updateData.mailingAddress = mailingAddress || '';
       updateData.desiredService = desiredService || '';
-      // Business fields - preserve existing file metadata if it exists
-      if (proofOfOwnership) {
-        // Check if the user already has file metadata for this field
-        const existingUser = await db.collection("users").findOne({
-          _id: new ObjectId(result.user._id)
-        });
-        
-        if (existingUser && existingUser.proofOfOwnership && typeof existingUser.proofOfOwnership === 'object') {
-          // Update the URL in the existing metadata
-          updateData.proofOfOwnership = {
-            ...existingUser.proofOfOwnership,
-            url: proofOfOwnership
-          };
-        } else {
-          updateData.proofOfOwnership = proofOfOwnership;
-        }
-      }
-      
+      // Business fields (reduced)
       if (taxForm) {
         // Check if the user already has file metadata for this field
         const existingUser = await db.collection("users").findOne({
@@ -223,10 +199,8 @@ export async function PUT(request: NextRequest) {
           updateData.taxForm = taxForm;
         }
       }
-      
-      updateData.businessLicenseNumber = businessLicenseNumber || '';
-      updateData.taxId = taxId || '';
-      updateData.bankAccountInfo = bankAccountInfo || '';
+      if (typeof taxId === 'string') updateData.taxId = taxId;
+      if (typeof bankAccountInfo === 'string') updateData.bankAccountInfo = bankAccountInfo;
     }
 
     // Update user in MongoDB
@@ -243,16 +217,18 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update guest in OwnerRez if guestId exists
-    if (result.user.guestId) {
+    if (result.user.guestId && (updateData.fullName || updateData.phone)) {
       try {
-        const { first_name, last_name } = parseFullName(fullName);
+        const nameForOwnerRez = updateData.fullName || result.user.fullName || '';
+        const phoneForOwnerRez = updateData.phone || result.user.phone || '';
+        const { first_name, last_name } = parseFullName(nameForOwnerRez);
         
         const ownerRezData = {
           first_name,
           last_name,
           phones: [
             {
-              number: phone,
+              number: phoneForOwnerRez,
               type: 'mobile',
               is_default: true
             }

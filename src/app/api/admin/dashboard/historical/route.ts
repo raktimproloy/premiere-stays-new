@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { startOfMonth, endOfMonth, subMonths, addMonths, parseISO, differenceInDays, getDaysInMonth } from 'date-fns';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const TOTAL_PROPERTIES = 10; // Should come from environment/config
 
@@ -172,26 +174,56 @@ function processHistoricalData(bookings: Booking[]) {
 }
 
 export async function GET() {
+  const CACHE_DIR = path.join(process.cwd(), 'src', 'app', 'api', 'bookings', 'historical');
+  const CACHE_FILE = path.join(CACHE_DIR, 'historicalCache.json');
+  const CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
   try {
+    // Try to read cache
+    let cacheValid = false;
+    let cachedData: any = null;
+    try {
+      const cacheContent = await fs.readFile(CACHE_FILE, 'utf-8');
+      const parsed = JSON.parse(cacheContent);
+      if (parsed.timestamp && Date.now() - parsed.timestamp < CACHE_DURATION_MS) {
+        cacheValid = true;
+        cachedData = parsed.data;
+      }
+    } catch (err) {
+      // Cache file does not exist or is invalid, ignore
+    }
+    if (cacheValid) {
+      return NextResponse.json(cachedData);
+    }
     // Dummy role assignment
     const role = 'admin';
     const now = new Date();
-    
     // Date range: 12 months back (including current month)
     const start = startOfMonth(subMonths(now, 11)).toISOString();
     const end = endOfMonth(addMonths(now, 4)).toISOString();
-
     const bookings = await fetchBookings(start, end);
     const data = processHistoricalData(bookings);
-
-    return NextResponse.json({
+    const responseData = {
       role,
       previousRevenue: role === 'admin' ? data.revenueData : [],
       occupancyTrends: data.occupancyData,
       bookingSources: data.bookingSources,
       nightlyRates: role === 'admin' ? data.nightlyRateData : [],
       bookings: data.rawBookings
-    });
+    };
+    // Save to cache
+    try {
+      // Ensure the cache directory exists
+      await fs.mkdir(CACHE_DIR, { recursive: true });
+      await fs.writeFile(
+        CACHE_FILE,
+        JSON.stringify({ timestamp: Date.now(), data: responseData }, null, 2),
+        'utf-8'
+      );
+    } catch (err) {
+      // Log cache write error but don't fail the request
+      console.error('Failed to write cache:', err);
+    }
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Historical data error:', error);
     return NextResponse.json(

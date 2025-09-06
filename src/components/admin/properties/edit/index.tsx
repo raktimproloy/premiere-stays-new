@@ -528,6 +528,7 @@ export default function EditPropertyPage() {
                   >
                     <option value="">Select Property Type</option>
                     <option value="villa">Villa</option>
+                    <option value="townhouse">Townhouse</option>
                     <option value="apartment">Apartment</option>
                     <option value="house">House</option>
                     <option value="condo">Condo</option>

@@ -1,7 +1,5 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { startOfMonth, endOfMonth, addMonths, parseISO, differenceInDays, getDaysInMonth } from 'date-fns';
-import { authService } from '@/lib/auth';
-import clientPromise from '@/lib/mongodb';
 
 const TOTAL_PROPERTIES = 10; // Should come from environment/config
 
@@ -16,7 +14,7 @@ interface Booking {
   [key: string]: any;
 }
 
-async function fetchBookings(start: string, end: string, propertyIds?: number[]): Promise<Booking[]> {
+async function fetchBookings(start: string, end: string): Promise<Booking[]> {
   const username = process.env.NEXT_PUBLIC_OWNERREZ_USERNAME || "info@premierestaysmiami.com";
   const password = process.env.NEXT_PUBLIC_OWNERREZ_ACCESS_TOKEN || "pt_1xj6mw0db483n2arxln6rg2zd8xockw2";
   const v2Url = process.env.NEXT_PUBLIC_OWNERREZ_API_V2 || "https://api.ownerrez.com/v2";
@@ -38,11 +36,8 @@ async function fetchBookings(start: string, end: string, propertyIds?: number[])
     base.searchParams.append('to', end);
     base.searchParams.append('limit', String(limit));
     base.searchParams.append('offset', String(offset));
-    if (propertyIds && propertyIds.length) {
-      base.searchParams.append('property_ids', propertyIds.join(','));
-    }
-    const url = base.toString();
-    const res = await fetch(url, {
+
+    const res = await fetch(base.toString(), {
       headers: { 
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json'
@@ -55,15 +50,11 @@ async function fetchBookings(start: string, end: string, propertyIds?: number[])
     }
 
     const data = await res.json();
-    
-    // Check if data.items exists and is an array
     if (!data.items || !Array.isArray(data.items)) {
       console.error('Invalid response format:', data);
       break;
     }
-    
     bookings.push(...data.items);
-    
     if (data.items.length < limit) break;
     offset += limit;
   }
@@ -81,19 +72,14 @@ function calculateMonthlyData(bookings: Booking[], month: Date) {
   bookings.forEach(booking => {
     const arrival = parseISO(booking.arrival);
     const departure = parseISO(booking.departure);
-    
     if (arrival > monthEnd || departure < monthStart) return;
-
     bookingsCount++;
-    
     const bookingNights = differenceInDays(departure, arrival);
     const rent = booking.charges?.reduce((sum, charge) => 
       charge.type === 'rent' ? sum + charge.amount : sum, 0) || 0;
-    
     const startOverlap = arrival > monthStart ? arrival : monthStart;
     const endOverlap = departure < monthEnd ? departure : monthEnd;
     const overlapNights = differenceInDays(endOverlap, startOverlap);
-    
     if (bookingNights > 0) {
       nights += overlapNights;
       revenue += (overlapNights / bookingNights) * rent;
@@ -106,57 +92,27 @@ function calculateMonthlyData(bookings: Booking[], month: Date) {
   return { bookingsCount, revenue, occupancy, nights };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Authenticate and determine role
-    const token = request.cookies.get('authToken')?.value || '';
-    const result = token ? await authService.verifyToken(token) : { valid: false } as any;
-    const role = result?.user?.role || 'user';
-    const email = result?.user?.email || '';
-    let propertyIds: number[] | undefined = undefined;
-
-    if (role === 'admin' && email) {
-      try {
-        const client = await clientPromise;
-        const db = client.db('premiere-stays');
-        // Find properties owned by this admin and extract OwnerRez IDs
-        const cursor = db.collection('properties').find({ 'owner.email': email }, { projection: { ownerRezId: 1 } });
-        const props = await cursor.toArray();
-        const ids = props
-          .map((p: any) => Number(p.ownerRezId))
-          .filter((id: number) => Number.isFinite(id));
-        if (ids.length) propertyIds = Array.from(new Set(ids));
-      } catch (e) {
-        console.error('Failed to read properties for admin:', e);
-      }
-    }
+    const role = 'superadmin';
     const now = new Date();
-    
-    // Date ranges for current + next 3 months
     const start = startOfMonth(now).toISOString();
     const end = endOfMonth(addMonths(now, 3)).toISOString();
-
-    const bookings = await fetchBookings(start, end, propertyIds);
+    const bookings = await fetchBookings(start, end);
     const currentMonthData = calculateMonthlyData(bookings, now);
-
-    // Filter bookings for response
-    // const filteredBookings = bookings.map(booking => {
-    //   const { charges, total_amount, total_owed, ...safeFields } = booking;
-    //   return role === 'admin' ? booking : safeFields;
-    // });
-
     return NextResponse.json({
       role,
       totalBookings: currentMonthData.bookingsCount,
-      totalRevenue: role === 'admin' ? currentMonthData.revenue : 0,
+      totalRevenue: currentMonthData.revenue,
       occupancyRate: currentMonthData.occupancy,
-      // bookings: filteredBookings
     });
   } catch (error) {
-    console.error('Current month error:', error);
+    console.error('Superadmin current month error:', error);
     return NextResponse.json(
       { error: 'Failed to process data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
 }
+
+

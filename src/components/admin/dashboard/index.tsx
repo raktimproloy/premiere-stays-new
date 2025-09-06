@@ -137,7 +137,7 @@ export default function Index() {
   const [currentMonthData, setCurrentMonthData] = useState<CurrentMonthData | null>(null);
   const [historicalData, setHistoricalData] = useState<HistoricalData | null>(null);
   const [statementsData, setStatementsData] = useState<StatementsData | null>(null);
-  const [propertiesData, setPropertiesData] = useState<PropertiesData | null>(null);
+  const [propertiesData, setPropertiesData] = useState<PropertiesData | any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -163,7 +163,7 @@ export default function Index() {
   };
     const fetchProperties = async (page: number) => {
     try {
-      const response = await fetch(`/api/properties?page=${page}&pageSize=4`);
+      const response = await fetch(`/api/properties/admin?page=${page}&pageSize=4`);
       if (!response.ok) throw new Error('Failed to fetch owner statements');
       const data = await response.json();
       setPropertiesData(data);
@@ -180,8 +180,8 @@ export default function Index() {
       
       try {
         const [currentMonthRes, historicalRes] = await Promise.all([
-          fetch('/api/bookings/current-month'),
-          fetch('/api/bookings/historical')
+          fetch('/api/admin/dashboard/current-month'),
+          fetch('/api/admin/dashboard/historical')
         ]);
 
         // Handle API errors
@@ -298,14 +298,14 @@ export default function Index() {
               <BookingSourcesChart bookings={historicalData?.bookings || []} />
             </div>
           </div>
-          <div className="space-y-6 md:mt-0 mt-6">
+          {/* <div className="space-y-6 md:mt-0 mt-6">
             <OwnerStatementsTable 
                 data={statementsData}
                 isLoading={isLoading && !statementsData}
                 error={error}
                 onPageChange={handlePageChange}
               />
-          </div>
+          </div> */}
           <div className="space-y-6 mt-6">
             <PropertiesTable 
                 data={propertiesData}

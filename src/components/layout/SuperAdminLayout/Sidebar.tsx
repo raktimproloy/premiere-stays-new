@@ -58,14 +58,14 @@ export default function Sidebar({
     { title: 'Dashboard', link: '/superadmin/dashboard', icon: <DashboardIcon /> },
     // { title: 'Business Request', link: '/superadmin/business-request', icon: <BusinessRequestIcon /> },
     { title: 'Manage Property', link: '/superadmin/properties', icon: <PropertyIcon /> },
-    { title: 'Property Request', link: '/superadmin/property-request', icon: <PropertyIcon /> },
+    // { title: 'Property Request', link: '/superadmin/property-request', icon: <PropertyIcon /> },
     { title: 'Bookings', link: '/superadmin/bookings', icon: <BookingIcon /> },
     { title: 'Payment History', link: '/superadmin/payment-history', icon: <PaymentHistoryIcon /> },
     { title: 'Calendar', link: '/superadmin/calendar', icon: <CalendarIcon /> },
     { title: 'Reviews', link: '/superadmin/reviews', icon: <ReviewsIcon /> },
     { title: 'Users', link: '/superadmin/users', icon: <ProfileIcon /> },
     { title: 'Contact Messages', link: '/superadmin/contact-messages', icon: <ProfileIcon /> },
-    { title: 'Chat Messages', link: '/superadmin/chat-messages', icon: <ProfileIcon /> },
+    { title: 'Chat Messages', link: '/superadmin/chat-messages', icon: <BusinessRequestIcon /> },
     { title: 'Help Messages', link: '/superadmin/help-messages', icon: <ProfileIcon /> },
   ];
 

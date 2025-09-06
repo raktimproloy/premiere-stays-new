@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authService } from '@/lib/auth';
+import clientPromise from '@/lib/mongodb';
 
 const username = process.env.NEXT_PUBLIC_OWNERREZ_USERNAME || "info@premierestaysmiami.com";
 const password = process.env.NEXT_PUBLIC_OWNERREZ_ACCESS_TOKEN || "pt_1xj6mw0db483n2arxln6rg2zd8xockw2";
@@ -56,14 +58,17 @@ interface TransformedBooking {
   guest?: Guest;
 }
 
-async function fetchAllBookings(limit: number = 50, offset: number = 0, sinceDate?: string) {
+async function fetchAllBookings(limit: number = 50, offset: number = 0, sinceDate?: string, propertyIds?: number[]) {
   if (!username || !password || !v2Url) {
     throw new Error('API credentials not configured');
   }
 
   const auth = Buffer.from(`${username}:${password}`).toString('base64');
   const sinceParam = sinceDate ? `&since_utc=${sinceDate}` : '';
-  const url = `${v2Url}/bookings?limit=${limit}&offset=${offset}${sinceParam}`;
+  const propertyParam = Array.isArray(propertyIds) && propertyIds.length > 0
+    ? `&property_ids=${propertyIds.join(',')}`
+    : '';
+  const url = `${v2Url}/bookings?limit=${limit}&offset=${offset}${sinceParam}${propertyParam}`;
 
   const response = await fetch(url, {
     method: 'GET',
@@ -73,12 +78,14 @@ async function fetchAllBookings(limit: number = 50, offset: number = 0, sinceDat
     },
   });
   
-  console.log('Bookings API Response:', {
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    headers: Object.fromEntries(response.headers.entries())
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Bookings API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+  }
 
   if (!response.ok) {
     const contentType = response.headers.get('content-type') || '';
@@ -100,64 +107,52 @@ async function fetchAllBookings(limit: number = 50, offset: number = 0, sinceDat
   }
 
   const data: any = await response.json();
-  console.log('Bookings data received:', data);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Bookings data received meta:', {
+      hasItems: Array.isArray((data as any)?.items),
+      itemsCount: Array.isArray((data as any)?.items) ? (data as any).items.length : 0,
+    });
+  }
   return data;
 }
 
-async function fetchAllGuests(createdSince?: string) {
+// Small per-guest cache to avoid re-fetching the same guest repeatedly
+const GUEST_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const guestCache = new Map<number, { timestamp: number; guest: Guest }>();
+
+async function fetchGuestById(guestId: number): Promise<Guest | null> {
   if (!username || !password || !v2Url) {
     throw new Error('API credentials not configured');
   }
 
-  const auth = Buffer.from(`${username}:${password}`).toString('base64');
-  const sinceParam = createdSince ? `&created_since_utc=${createdSince}` : '';
-  let allGuests: Guest[] = [];
-  console.log("v2Url", v2Url)
-  let nextPageUrl: string | null = `${v2Url}/guests?limit=1000${sinceParam}`;
-
-  while (nextPageUrl) {
-    const response = await fetch(nextPageUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log('Guests API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url,
-      headers: Object.fromEntries(response.headers.entries())
-    });
-
-    if (!response.ok) {
-      const contentType = response.headers.get('content-type') || '';
-      let errorMessage: string;
-      
-      try {
-        if (contentType.includes('application/json')) {
-          const error = await response.json();
-          errorMessage = error.message || 'Unknown error';
-        } else {
-          const errorText = await response.text();
-          errorMessage = `Non-JSON response: ${errorText.substring(0, 200)}...`;
-        }
-      } catch (parseError) {
-        errorMessage = `Failed to parse error response: ${response.statusText}`;
-      }
-      
-      throw new Error(`OwnerRez API error: ${response.status} - ${errorMessage}`);
-    }
-
-    const data: any = await response.json();
-    console.log('Guests data received:', data);
-    allGuests = [...allGuests, ...(data.items || [])];
-    nextPageUrl = data.next_page_url ? `https://api.ownerrez.com${data.next_page_url}` : null;
+  const cached = guestCache.get(guestId);
+  if (cached && Date.now() - cached.timestamp < GUEST_CACHE_TTL_MS) {
+    return cached.guest;
   }
 
-  return allGuests;
+  const auth = Buffer.from(`${username}:${password}`).toString('base64');
+  const url = `${v2Url}/guests/${guestId}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    // If guest not found or other error, return null instead of throwing to avoid breaking bookings listing
+    return null;
+  }
+
+  const data: Guest = await response.json();
+  guestCache.set(guestId, { timestamp: Date.now(), guest: data });
+  return data;
 }
+
+// Simple in-memory cache to prevent repeated upstream calls for identical queries
+const CACHE_TTL_MS = 30 * 1000; // 30 seconds
+const bookingsCache = new Map<string, { timestamp: number; payload: any }>();
 
 export async function GET(request: NextRequest) {
   try {
@@ -165,25 +160,54 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
     const sinceDate = searchParams.get('since') || '2024-01-01T00:00:00Z';
-    const guestSinceDate = searchParams.get('guestSince') || '2024-01-01T00:00:00Z';
+    // Authenticate to determine role and filter
+    const token = request.cookies.get('authToken')?.value || '';
+    const authResult = token ? await authService.verifyToken(token) : { valid: false } as any;
+    const role: string = authResult?.user?.role || 'user';
+    const email: string = authResult?.user?.email || '';
 
-    // Fetch bookings and guests in parallel
-    const [bookingsData, guests] = await Promise.all([
-      fetchAllBookings(limit, offset, sinceDate),
-      fetchAllGuests(guestSinceDate)
-    ]);
+    let propertyIds: number[] | undefined = undefined;
+    if (role === 'admin' && email) {
+      try {
+        const client = await clientPromise;
+        const db = client.db('premiere-stays');
+        const cursor = db.collection('properties').find({ 'owner.email': email }, { projection: { ownerRezId: 1 } });
+        const props = await cursor.toArray();
+        const ids = props
+          .map((p: any) => Number(p.ownerRezId))
+          .filter((n: number) => Number.isFinite(n));
+        if (ids.length > 0) propertyIds = ids;
+      } catch (e) {
+        console.error('Failed to load admin property IDs:', e);
+      }
+    }
 
-    console.log("bookings", bookingsData)
-    console.log("guests", guests)
+    // guestSince is no longer used since we fetch guests by ID only
+    const pidKey = propertyIds && propertyIds.length > 0 ? `&pids=${propertyIds.join(',')}` : '';
+    const cacheKey = `limit=${limit}&offset=${offset}&since=${sinceDate}${pidKey}`;
+    const cached = bookingsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return NextResponse.json(cached.payload, { headers: { 'X-Cache': 'HIT' } });
+    }
 
-    // Create a map of guests by ID for quick lookup
+    // Fetch bookings first (filtered for admins)
+    const bookingsData = await fetchAllBookings(limit, offset, sinceDate, propertyIds);
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("bookings-meta", { items: Array.isArray(bookingsData?.items) ? bookingsData.items.length : 0, role, filtered: Array.isArray(propertyIds) && propertyIds.length > 0 });
+    }
+
+    // Collect unique guest IDs from this page and fetch details for each (with small cache)
+    const uniqueGuestIds = Array.from(new Set((bookingsData.items || []).map((b: Booking) => b.guest_id).filter(Boolean)));
+    const guestResults = await Promise.all(uniqueGuestIds.map(id => fetchGuestById(id as number)));
     const guestsMap = new Map<number, Guest>();
-    guests.forEach(guest => {
-      guestsMap.set(guest.id, guest);
+    guestResults.forEach((g, idx) => {
+      const id = uniqueGuestIds[idx];
+      if (g) guestsMap.set(id as number, g);
     });
 
     // Transform bookings with guest information
-    const transformedBookings: TransformedBooking[] = bookingsData.items.map((booking: Booking) => {
+    const transformedBookings: TransformedBooking[] = (bookingsData.items || []).map((booking: Booking) => {
       const guest = guestsMap.get(booking.guest_id);
       
       // Extract primary email and phone
@@ -211,7 +235,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    const payload = {
       bookings: transformedBookings,
       pagination: {
         total: bookingsData.total || 0,
@@ -219,7 +243,10 @@ export async function GET(request: NextRequest) {
         offset: bookingsData.offset,
         hasMore: !!bookingsData.next_page_url
       }
-    });
+    };
+
+    bookingsCache.set(cacheKey, { timestamp: Date.now(), payload });
+    return NextResponse.json(payload, { headers: { 'X-Cache': 'MISS' } });
 
   } catch (error) {
     console.error('Error fetching bookings:', error);

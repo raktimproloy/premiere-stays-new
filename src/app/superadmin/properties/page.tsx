@@ -1,5 +1,5 @@
 import SuperAdminLayout from '@/components/layout/SuperAdminLayout'
-import Properties from '@/components/admin/properties'
+import Properties from '@/components/superadmin/properties'
 import React from 'react'
 
 export default function page() {

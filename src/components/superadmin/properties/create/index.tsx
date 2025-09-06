@@ -3,8 +3,13 @@
 
 import { useState } from 'react';
 import CreateModal from './createModal';
+import dynamic from 'next/dynamic';
+const RichTextEditor = dynamic(() => import('@/components/common/Editor'), { ssr: false });
+import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CreatePropertyPage() {
+  const router = useRouter();
   // State for form fields
   const [propertyName, setPropertyName] = useState('');
   const [propertyLocation, setPropertyLocation] = useState('');
@@ -12,28 +17,28 @@ export default function CreatePropertyPage() {
   const [totalBedroom, setTotalBedroom] = useState('');
   const [propertyType, setPropertyType] = useState('');
   const [capacity, setCapacity] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [details, setDetails] = useState(''); // was fullName
   const [fileUploaded, setFileUploaded] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [editorValue, setEditorValue] = useState('');
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateNewProperty = () => {
-    console.log('Create new property clicked');
     // Navigate to create property page in a real app
     // router.push('/create-property');
     setIsModalOpen(false);
   };
 
   const handleBackToList = () => {
-    console.log('Back to property list clicked');
     // Navigate to property list page in a real app
-    // router.push('/properties');
+    router.push('/admin/properties');
     setIsModalOpen(false);
   };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,8 +53,8 @@ export default function CreatePropertyPage() {
       totalBedroom: totalBedroom,
       propertyType: propertyType,
       capacity: capacity,
-      details: fullName,
-      editorValue: '',
+      details: details,
+      editorValue: editorValue,
     };
 
     try {
@@ -90,9 +95,10 @@ export default function CreatePropertyPage() {
       setTotalBedroom("");
       setPropertyType("");
       setCapacity("");
-      setFullName("");
+      setDetails("");
       setUploadedFiles([]);
       setFileUrls([]);
+      setEditorValue("");
       setIsModalOpen(true);
     } catch (err: any) {
       setError(err.message || 'Failed to create property');
@@ -149,7 +155,6 @@ export default function CreatePropertyPage() {
         {error && (
           <div className="mb-4 text-red-600 font-semibold">{error}</div>
         )}
-
         <form>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
             <div className="bg-white shadow rounded-lg p-6 sm:p-8">
@@ -239,6 +244,7 @@ export default function CreatePropertyPage() {
                   >
                     <option value="">Select Property Type</option>
                     <option value="villa">Villa</option>
+                    <option value="townhouse">Townhouse</option>
                     <option value="apartment">Apartment</option>
                     <option value="house">House</option>
                     <option value="condo">Condo</option>
@@ -257,7 +263,7 @@ export default function CreatePropertyPage() {
                     required
                   >
                     <option value="">Select Capacity</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(num => (
                       <option key={num} value={num}>{num} {num === 1 ? 'person' : 'people'}</option>
                     ))}
                   </select>
@@ -320,21 +326,22 @@ export default function CreatePropertyPage() {
           </div>
 
 
-          {/* Full Name */}
-          <div className="bg-white shadow rounded-lg p-6 sm:p-8">
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-              Enter your full name
+          {/* Full Name (now Details) */}
+          {/* <div className="bg-white shadow rounded-lg p-6 sm:p-8">
+            <label htmlFor="details" className="block text-sm font-medium text-gray-700 mb-2">
+              Enter property details
             </label>
             <input
               type="text"
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Type your full name"
+              id="details"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="Type property details"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               required
             />
-          </div>
+          </div> */}
+          <RichTextEditor onChange={setEditorValue} />
 
           
         </form>
